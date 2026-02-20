@@ -1,0 +1,12 @@
+# ── Auto-generated per machine (DO NOT share) ──
+bin/
+.venv/
+.nxc_venv/
+config.json
+results/
+__pycache__/
+*.pyc
+
+# ── OS files ──
+.DS_Store
+Thumbs.db

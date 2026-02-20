@@ -1,0 +1,7 @@
+https://github.com/owasp-amass/amass
+https://github.com/projectdiscovery/httpx
+https://github.com/epi052/feroxbuster
+https://github.com/projectdiscovery/nuclei
+https://github.com/ShawnDEvans/smbmap
+https://github.com/rapid7/metasploit-framework
+https://github.com/Pennyw0rth/NetExec
