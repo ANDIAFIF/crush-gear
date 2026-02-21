@@ -34,6 +34,8 @@ class MetasploitTool(BaseTool):
             lhost=self.lhost,
             lport=self.lport,
             extra_cve_map=extra_cve_map if extra_cve_map else None,
+            username=self.username,
+            password=self.password,
         )
 
         # post_rc_path is already written by build_msf_rc

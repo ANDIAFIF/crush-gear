@@ -130,6 +130,25 @@ def _log_feed_summary(feed: dict):
             f"[cyan]{len(feed['smb_hosts'])} SMB hosts[/] (port 445 open)"
         )
 
+    _proto_map = [
+        ("windows_hosts", "Windows hosts", "bright_white"),
+        ("dc_hosts",      "Domain Controllers", "bright_magenta"),
+        ("winrm_hosts",   "WinRM hosts",    "bright_green"),
+        ("mssql_hosts",   "MSSQL hosts",    "bright_yellow"),
+        ("rdp_hosts",     "RDP hosts",      "bright_blue"),
+        ("ssh_hosts",     "SSH hosts",      "bright_cyan"),
+        ("ldap_hosts",    "LDAP hosts",     "bright_red"),
+    ]
+    for key, label, color in _proto_map:
+        hosts = feed.get(key, [])
+        if hosts:
+            console.print(
+                f"  [bold {color}][FEED][/] nmap {label:<18} → "
+                f"[{color}]{len(hosts)} host(s)[/]: "
+                + ", ".join(hosts[:4])
+                + (" …" if len(hosts) > 4 else "")
+            )
+
     if feed.get("urls"):
         console.print(
             f"  [bold bright_yellow][FEED][/] httpx      → "
