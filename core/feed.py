@@ -154,7 +154,8 @@ def parse_nuclei(output_dir: Path) -> list[dict]:
             obj = json.loads(line)
             info = obj.get("info", {})
             classification = info.get("classification", {})
-            cve_ids = classification.get("cve-id", [])
+            # nuclei may output "cve-id": null — use `or []` to guard against None
+            cve_ids = classification.get("cve-id") or []
             if isinstance(cve_ids, str):
                 cve_ids = [cve_ids]
             host = obj.get("host") or obj.get("matched-at") or ""
