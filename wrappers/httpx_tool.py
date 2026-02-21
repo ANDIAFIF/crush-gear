@@ -1,7 +1,7 @@
 import tempfile
 from pathlib import Path
 from wrappers.base import BaseTool
-from core.target import TargetInfo, TargetType
+from core.target import TargetType
 
 
 class HttpxTool(BaseTool):
@@ -13,44 +13,86 @@ class HttpxTool(BaseTool):
 
         t = self.target
 
-        # Prefer nmap-discovered web URLs, then amass hosts, then original target
+        # Phase 1 runs in parallel with amass, after nmap.
+        # Feed may be empty here — fall back to probing target directly.
         nmap_web_urls = self.feed.get("urls", [])
-        amass_hosts = self.feed.get("hosts", [])
+        amass_hosts   = self.feed.get("hosts", [])
 
         if nmap_web_urls:
-            # Write to temp file for -list
             url_file = Path(tempfile.mktemp(prefix="crushgear_httpx_", suffix=".txt"))
             url_file.write_text("\n".join(nmap_web_urls) + "\n")
-            target_args = ["-list", str(url_file)]
+            target_args = ["-l", str(url_file)]
+
         elif amass_hosts:
-            url_file = Path(tempfile.mktemp(prefix="crushgear_httpx_", suffix=".txt"))
-            # Add http/https for each discovered host
-            urls = []
+            lines = []
             for h in amass_hosts:
-                urls.append(f"http://{h}")
-                urls.append(f"https://{h}")
-            url_file.write_text("\n".join(urls) + "\n")
-            target_args = ["-list", str(url_file)]
-        elif t.type == TargetType.CIDR:
-            urls = [f"http://{ip}" for ip in t.hosts[:254]]
+                lines += [f"http://{h}", f"https://{h}"]
             url_file = Path(tempfile.mktemp(prefix="crushgear_httpx_", suffix=".txt"))
-            url_file.write_text("\n".join(urls) + "\n")
-            target_args = ["-list", str(url_file)]
+            url_file.write_text("\n".join(lines) + "\n")
+            target_args = ["-l", str(url_file)]
+
+        elif t.type == TargetType.CIDR:
+            # Probe each host on common web ports
+            lines = []
+            for ip in t.hosts[:254]:
+                lines += [
+                    f"http://{ip}",
+                    f"https://{ip}",
+                    f"http://{ip}:8080",
+                    f"http://{ip}:8443",
+                ]
+            url_file = Path(tempfile.mktemp(prefix="crushgear_httpx_", suffix=".txt"))
+            url_file.write_text("\n".join(lines) + "\n")
+            target_args = ["-l", str(url_file)]
+
         elif t.type == TargetType.URL:
             target_args = ["-u", t.url]
+
         else:
-            target_args = ["-u", f"http://{t.host}", "-u", f"https://{t.host}"]
+            # IP or DOMAIN — probe http, https, and common alt-ports
+            host = t.host
+            lines = [
+                f"http://{host}",
+                f"https://{host}",
+                f"http://{host}:8080",
+                f"http://{host}:8443",
+                f"http://{host}:8888",
+                f"http://{host}:9090",
+            ]
+            url_file = Path(tempfile.mktemp(prefix="crushgear_httpx_", suffix=".txt"))
+            url_file.write_text("\n".join(lines) + "\n")
+            target_args = ["-l", str(url_file)]
 
         return [
             self.binary,
             *target_args,
+
+            # ── Probes ───────────────────────────────────────────────
+            # NOTE: httpx v1.2+ renamed flags:
+            #   -threads      → -c  (old flag removed in newer builds)
+            #   -status-code  → -sc
+            #   -tech-detect  → -td
+            #   -web-server   → -server
+            #   -content-length→ -cl
+            #   -follow-redirects → -fr
+            #   -json / -jsonl → -j  (stable alias)
             "-title",
-            "-status-code",
-            "-tech-detect",
-            "-web-server",
-            "-content-length",
-            "-follow-redirects",
-            "-json",
+            "-sc",          # status code
+            "-td",          # tech detection (Wappalyzer)
+            "-server",      # web server banner
+            "-cl",          # content length
+            "-ip",          # resolved IP
+            "-cdn",         # CDN detection
+            "-fr",          # follow redirects
+            "-maxr", "5",   # max redirects
+
+            # ── Output ───────────────────────────────────────────────
+            "-j",           # JSONL output (stable across versions)
             "-silent",
-            "-threads", "50",
+
+            # ── Performance ─────────────────────────────────────────
+            "-c",      "50",    # concurrency (-threads is DEPRECATED)
+            "-timeout", "10",
+            "-retries", "2",
+            "-random-agent",
         ]
