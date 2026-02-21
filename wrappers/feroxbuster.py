@@ -3,18 +3,45 @@ from pathlib import Path
 from wrappers.base import BaseTool
 from core.target import TargetType
 
-# Wordlist search order: prefer smaller/faster lists first.
-# raft-small (~18k) gives the best speed/coverage ratio.
-# The medium wordlist (220k) is too large for automated multi-target runs.
+# Wordlist search order: best coverage/speed ratio first.
+#
+# Priority logic:
+#   1. SecLists raft-small   (~18k)  — best balance for automated scans
+#   2. SecLists raft-medium  (~30k)  — more thorough, still manageable
+#   3. SecLists big.txt      (~20k)  — SecLists "big" combined list
+#   4. SecLists common.txt   (~4.7k) — quick fallback
+#   5. Kali dirb             (~4.6k) — Kali built-in, always present
+#   6. dirbuster medium      (~220k) — last resort, very slow
+#
+# Kali Linux: SecLists is at /usr/share/seclists  (apt install seclists)
+# macOS:      SecLists is at /opt/homebrew/share/seclists (brew install seclists)
 WORDLIST_CANDIDATES = [
-    "/usr/share/seclists/Discovery/Web-Content/raft-small-directories.txt",       # ~18k best
-    "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt",      # ~30k
+    # ── SecLists (Kali Linux default install path) ───────────────────
+    "/usr/share/seclists/Discovery/Web-Content/raft-small-directories.txt",
+    "/usr/share/seclists/Discovery/Web-Content/raft-medium-directories.txt",
+    "/usr/share/seclists/Discovery/Web-Content/big.txt",
+    "/usr/share/seclists/Discovery/Web-Content/common.txt",
+    # ── SecLists (alternate Kali / Debian paths) ─────────────────────
+    "/usr/share/SecLists/Discovery/Web-Content/raft-small-directories.txt",
+    "/usr/share/SecLists/Discovery/Web-Content/raft-medium-directories.txt",
+    "/usr/share/SecLists/Discovery/Web-Content/big.txt",
+    # ── SecLists (macOS Homebrew) ────────────────────────────────────
     "/opt/homebrew/share/seclists/Discovery/Web-Content/raft-small-directories.txt",
-    "/usr/share/seclists/Discovery/Web-Content/common.txt",                       # ~4.7k
-    "/usr/share/wordlists/dirb/common.txt",                                       # ~4.6k
-    "/opt/homebrew/share/dirb/wordlists/common.txt",
+    "/opt/homebrew/share/seclists/Discovery/Web-Content/raft-medium-directories.txt",
+    "/usr/local/share/seclists/Discovery/Web-Content/raft-small-directories.txt",
+    # ── SecLists (manual git clone to /opt) ─────────────────────────
+    "/opt/seclists/Discovery/Web-Content/raft-small-directories.txt",
+    "/opt/SecLists/Discovery/Web-Content/raft-small-directories.txt",
+    # ── Kali Linux built-in (no apt needed) ─────────────────────────
+    "/usr/share/wordlists/dirb/big.txt",                          # ~20k
+    "/usr/share/wordlists/dirb/common.txt",                       # ~4.6k
+    "/usr/share/dirb/wordlists/big.txt",
     "/usr/share/dirb/wordlists/common.txt",
-    "/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt",               # ~220k last resort
+    # ── macOS Homebrew dirb fallback ────────────────────────────────
+    "/opt/homebrew/share/dirb/wordlists/common.txt",
+    # ── Kali dirbuster (heavy, last resort) ─────────────────────────
+    "/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt",  # ~220k
+    "/usr/share/wordlists/dirbuster/directory-list-2.3-small.txt",   # ~87k
 ]
 
 # Hard cap feroxbuster scan time from inside feroxbuster itself.

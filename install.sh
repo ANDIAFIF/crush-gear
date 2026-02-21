@@ -736,6 +736,83 @@ if [[ -n "$NUCLEI_BIN" ]]; then
   "$NUCLEI_BIN" -update-templates -silent 2>/dev/null && ok "Templates updated" || warn "Templates update skipped"
 fi
 
+# ── Step 5b: Wordlists — SecLists + bundled fallback ─────────────────────────
+step "Setting up wordlists"
+
+SECLISTS_OK=0
+SECLISTS_DIR=""
+
+# Check if SecLists already installed
+for dir in \
+  /usr/share/seclists \
+  /usr/share/SecLists \
+  /opt/seclists \
+  /opt/homebrew/share/seclists; do
+  if [[ -d "$dir/Discovery/Web-Content" ]]; then
+    SECLISTS_DIR="$dir"
+    SECLISTS_OK=1
+    ok "SecLists found: $dir"
+    break
+  fi
+done
+
+if [[ $SECLISTS_OK -eq 0 ]]; then
+  info "SecLists not found — attempting install..."
+
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    # Kali Linux / Debian / Ubuntu
+    if command -v apt-get &>/dev/null; then
+      sudo apt-get install -y seclists 2>&1 | tail -3
+      if [[ -d "/usr/share/seclists" ]]; then
+        SECLISTS_DIR="/usr/share/seclists"
+        SECLISTS_OK=1
+        ok "SecLists installed via apt: /usr/share/seclists"
+      else
+        # Fallback: git clone SecLists (if apt package not available)
+        if command -v git &>/dev/null; then
+          info "Cloning SecLists from GitHub (~500MB)..."
+          sudo git clone --depth 1 \
+            https://github.com/danielmiessler/SecLists.git \
+            /usr/share/seclists 2>&1 | tail -5
+          [[ -d "/usr/share/seclists" ]] && SECLISTS_DIR="/usr/share/seclists" && SECLISTS_OK=1 && ok "SecLists cloned to /usr/share/seclists"
+        fi
+      fi
+    elif command -v pacman &>/dev/null; then
+      # Arch / BlackArch
+      sudo pacman -Sy --noconfirm seclists 2>&1 | tail -3
+      [[ -d "/usr/share/seclists" ]] && SECLISTS_DIR="/usr/share/seclists" && SECLISTS_OK=1 && ok "SecLists installed via pacman"
+    fi
+
+  elif [[ "$(uname -s)" == "Darwin" ]]; then
+    # macOS via Homebrew
+    if command -v brew &>/dev/null; then
+      brew install seclists 2>&1 | tail -5
+      for dir in /opt/homebrew/share/seclists /usr/local/share/seclists; do
+        [[ -d "$dir/Discovery/Web-Content" ]] && SECLISTS_DIR="$dir" && SECLISTS_OK=1 && ok "SecLists installed: $dir" && break
+      done
+    fi
+  fi
+fi
+
+# Always ensure a decent bundled fallback wordlist exists (used when SecLists unavailable)
+BUNDLED_WORDLIST="wordlists/common.txt"
+BUNDLED_COUNT=$(wc -l < "$BUNDLED_WORDLIST" 2>/dev/null || echo 0)
+
+if [[ "$BUNDLED_COUNT" -lt 4000 ]]; then
+  info "Bundled wordlist too small (${BUNDLED_COUNT} lines) — downloading raft-small..."
+  # Download raft-small-directories from SecLists GitHub (raw, ~18k lines)
+  RAFT_URL="https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/Web-Content/raft-small-directories.txt"
+  if command -v curl &>/dev/null; then
+    curl -sL "$RAFT_URL" -o "$BUNDLED_WORDLIST" 2>/dev/null && ok "Bundled wordlist updated ($(wc -l < "$BUNDLED_WORDLIST") lines)" || warn "Bundled wordlist download failed — keeping existing"
+  elif command -v wget &>/dev/null; then
+    wget -q "$RAFT_URL" -O "$BUNDLED_WORDLIST" 2>/dev/null && ok "Bundled wordlist updated ($(wc -l < "$BUNDLED_WORDLIST") lines)" || warn "Bundled wordlist download failed"
+  fi
+else
+  ok "Bundled wordlist OK (${BUNDLED_COUNT} lines)"
+fi
+
+[[ $SECLISTS_OK -eq 0 ]] && warn "SecLists not installed — feroxbuster will use bundled fallback wordlist"
+
 # ── Step 6: Verify ────────────────────────────────────────────────────────────
 step "Verifying installation"
 "$CRUSHGEAR_PY" crushgear.py --check 2>/dev/null || $PY crushgear.py --check 2>/dev/null || warn "Verification skipped (rich module issue)"
