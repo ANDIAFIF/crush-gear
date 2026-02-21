@@ -29,6 +29,8 @@ from core.updater import (
     update_tool_sources,
     get_full_cve_map,
     ensure_nuclei_templates,
+    check_script_update,
+    update_script,
 )
 
 from wrappers.nmap import NmapTool
@@ -168,6 +170,7 @@ def print_help():
     cmd_table.add_row("python3 crushgear.py --check-updates",       "Bandingkan versi installed vs GitHub")
     cmd_table.add_row("python3 crushgear.py --update-cves",         "Update CVE→MSF mapping dari GitHub")
     cmd_table.add_row("python3 crushgear.py --update-tools",        "git pull semua source tools")
+    cmd_table.add_row("python3 crushgear.py --update-script",          "Update CrushGear script (git pull)")
     cmd_table.add_row("python3 crushgear.py --update-cves --github-token TOKEN",
                                                                      "Update CVE (lebih cepat, rate limit↑)")
     cmd_table.add_row("", "")
@@ -308,11 +311,14 @@ async def _run(args: argparse.Namespace):
     token    = args.github_token or ""
 
     # ── Startup update notification (cached, non-blocking) ──────────
-    outdated = await startup_check(binaries, token=token)
+    outdated, script_upd = await asyncio.gather(
+        startup_check(binaries, token=token),
+        check_script_update(),
+    )
     extra_cves = cfg.get("discovered_cves", {})
     last_cve   = cfg.get("_cve_last_update", "")
     total_cves = 117 + len(extra_cves)
-    print_startup_notification(outdated, total_cves, last_cve)
+    print_startup_notification(outdated, total_cves, last_cve, script_upd)
 
     cfg_timeouts = cfg.get("timeouts", {})
     lhost = args.lhost or cfg.get("lhost") or detect_lhost()
@@ -429,12 +435,13 @@ def main():
 
     # ── Setup & check ────────────────────────────────────────────────
     mgmt = parser.add_argument_group("Setup & Management")
-    mgmt.add_argument("--setup",         action="store_true", help="Build/install semua tools dari source")
-    mgmt.add_argument("--check",         action="store_true", help="Cek status binary + timeouts")
-    mgmt.add_argument("--check-updates", action="store_true", help="Cek versi installed vs GitHub latest")
-    mgmt.add_argument("--update-cves",   action="store_true", help="Update CVE→MSF mapping dari GitHub")
-    mgmt.add_argument("--update-tools",  action="store_true", help="git pull semua source tools")
-    mgmt.add_argument("--github-token",  default="", metavar="TOKEN",
+    mgmt.add_argument("--setup",          action="store_true", help="Build/install semua tools dari source")
+    mgmt.add_argument("--check",          action="store_true", help="Cek status binary + timeouts")
+    mgmt.add_argument("--check-updates",  action="store_true", help="Cek versi installed vs GitHub latest")
+    mgmt.add_argument("--update-cves",    action="store_true", help="Update CVE→MSF mapping dari GitHub")
+    mgmt.add_argument("--update-tools",   action="store_true", help="git pull semua source tools")
+    mgmt.add_argument("--update-script",  action="store_true", help="Update CrushGear script (git pull)")
+    mgmt.add_argument("--github-token",   default="", metavar="TOKEN",
                       help="GitHub API token (opsional, tingkatkan rate limit)")
 
     # ── Help ─────────────────────────────────────────────────────────
@@ -486,6 +493,31 @@ def main():
     if args.update_tools:
         print_banner()
         asyncio.run(update_tool_sources(PARENT_DIR, token=args.github_token))
+        return
+
+    if args.update_script:
+        print_banner()
+        console.rule("[bold]CrushGear Script Update[/bold]")
+        console.print("[dim]Checking for updates…[/dim]")
+        has_upd, count, latest = asyncio.run(check_script_update())
+        if not has_upd:
+            console.print("[green]✓ Script sudah versi terbaru.[/green]")
+        else:
+            console.print(
+                f"[yellow]  {count} commit baru ditemukan[/yellow]\n"
+                f"  [dim]Latest: {latest}[/dim]\n"
+                f"[dim]Menjalankan git pull…[/dim]"
+            )
+            ok, out = asyncio.run(update_script())
+            if ok:
+                console.print(f"[green]✓ CrushGear berhasil diupdate![/green]")
+                console.print(f"[dim]{out}[/dim]")
+                console.print(
+                    "\n[bold]Restart script untuk menggunakan versi terbaru:[/bold]\n"
+                    "  python3 crushgear.py ..."
+                )
+            else:
+                console.print(f"[red]✗ Update gagal:[/red]\n{out}")
         return
 
     if not args.target:

@@ -42,7 +42,8 @@ CVE_UPDATE_INTERVAL = 24 * 3600   # seconds between full CVE refreshes
 MSF_SEARCH_DELAY    = 2.0          # seconds between GitHub search API calls (rate limiting)
 MSF_MAX_PAGES       = 10           # max pages of MSF search results (100 results/page)
 
-CONFIG_FILE = Path(__file__).parent.parent / "config.json"
+CONFIG_FILE   = Path(__file__).parent.parent / "config.json"
+CRUSHGEAR_DIR = Path(__file__).parent.parent   # root of the crushgear repo
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -430,6 +431,54 @@ async def _git_pull(src_dir: Path, label: str = "") -> tuple[bool, str]:  # noqa
         return False, str(exc)
 
 
+async def check_script_update() -> tuple[bool, int, str]:
+    """
+    Check whether the crushgear git repo has new commits on the remote.
+    Does a silent `git fetch` then counts commits in HEAD..origin/<branch>.
+    Returns: (has_update, commit_count, latest_commit_subject)
+    """
+    try:
+        # 1. Fetch remote quietly (no merge)
+        fetch = await asyncio.create_subprocess_exec(
+            "git", "fetch", "--quiet",
+            cwd=str(CRUSHGEAR_DIR),
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        await asyncio.wait_for(fetch.wait(), timeout=15)
+
+        # 2. Get current tracking branch (e.g. origin/main)
+        branch_proc = await asyncio.create_subprocess_exec(
+            "git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}",
+            cwd=str(CRUSHGEAR_DIR),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        branch_out, _ = await asyncio.wait_for(branch_proc.communicate(), timeout=5)
+        upstream = branch_out.decode(errors="replace").strip() or "origin/main"
+
+        # 3. Count commits that are on remote but not local
+        log_proc = await asyncio.create_subprocess_exec(
+            "git", "log", f"HEAD..{upstream}", "--oneline",
+            cwd=str(CRUSHGEAR_DIR),
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        log_out, _ = await asyncio.wait_for(log_proc.communicate(), timeout=10)
+        commits = [l for l in log_out.decode(errors="replace").splitlines() if l.strip()]
+        return bool(commits), len(commits), (commits[0] if commits else "")
+    except Exception:
+        return False, 0, ""
+
+
+async def update_script() -> tuple[bool, str]:
+    """
+    Pull the latest version of crushgear from git (git pull).
+    Returns: (success, output_message)
+    """
+    return await _git_pull(CRUSHGEAR_DIR, "crushgear-script")
+
+
 async def update_tool_sources(parent_dir: Path, token: str = "") -> list[dict]:
     """
     git pull every tool source directory, then re-run setup_tools.
@@ -566,19 +615,41 @@ async def ensure_nuclei_templates(binary: str) -> bool:
         return not needs_download
 
 
-def print_startup_notification(outdated: list[dict], cve_total: int, last_cve_update: str):
-    if not outdated and not last_cve_update:
+def print_startup_notification(
+    outdated: list[dict],
+    cve_total: int,
+    last_cve_update: str,
+    script_update: tuple[bool, int, str] = (False, 0, ""),
+):
+    has_script_update, commit_count, latest_commit = script_update
+    if not outdated and not last_cve_update and not has_script_update:
         return
 
     lines = []
+
+    # ── CrushGear script update (highest priority) ───────────────────
+    if has_script_update:
+        lines.append(
+            f" [bold bright_red]★ CrushGear script update tersedia![/bold bright_red]"
+            f"  [dim]{commit_count} commit baru[/dim]"
+        )
+        if latest_commit:
+            lines.append(f"   [dim]Latest: {latest_commit[:72]}[/dim]")
+        lines.append(
+            "   Run: [bold bright_green]python3 crushgear.py --update-script[/bold bright_green]"
+        )
+        lines.append("")
+
+    # ── Tool updates ──────────────────────────────────────────────────
     if outdated:
         tools_str = ", ".join(
             f"[yellow]{r['tool']}[/yellow] {r['installed']}→{r['latest']}"
             for r in outdated
         )
-        lines.append(f" Updates available: {tools_str}")
+        lines.append(f" Tool updates: {tools_str}")
         lines.append(" Run: [bold]python3 crushgear.py --update-tools[/bold]")
 
+    # ── CVE coverage info ─────────────────────────────────────────────
     if last_cve_update:
         lines.append(
             f" CVE coverage: [bold]{cve_total} entries[/bold] "
@@ -587,9 +658,15 @@ def print_startup_notification(outdated: list[dict], cve_total: int, last_cve_up
         lines.append(" Run: [bold]python3 crushgear.py --update-cves[/bold]  to refresh")
 
     if lines:
+        border = "bright_red" if has_script_update else "yellow"
+        title  = (
+            "[bold bright_red]★ CrushGear Update Available ★[/bold bright_red]"
+            if has_script_update
+            else "[bold yellow]CrushGear Update Info[/bold yellow]"
+        )
         console.print(Panel(
             "\n".join(lines),
-            title="[bold yellow]CrushGear Update Info[/bold yellow]",
-            border_style="yellow",
+            title=title,
+            border_style=border,
             padding=(0, 2),
         ))
