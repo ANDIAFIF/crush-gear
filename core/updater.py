@@ -489,6 +489,83 @@ async def startup_check(binaries: dict, token: str = "") -> list[dict]:
         return []
 
 
+async def ensure_nuclei_templates(binary: str) -> bool:
+    """
+    Ensure nuclei templates are downloaded and up-to-date.
+    - Auto-downloads if templates are missing or fewer than 100 files found.
+    - Auto-updates if templates are older than 7 days.
+    Returns True if templates are ready to use.
+    """
+    # Nuclei v3 default template locations (in priority order)
+    template_dirs = [
+        Path.home() / ".local" / "nuclei-templates",
+        Path.home() / "nuclei-templates",
+        Path("/usr/share/nuclei-templates"),
+        Path("/opt/nuclei-templates"),
+    ]
+
+    template_dir: Optional[Path] = None
+    template_count = 0
+
+    for d in template_dirs:
+        if d.exists() and d.is_dir():
+            count = sum(1 for _ in d.rglob("*.yaml"))
+            if count > 100:
+                template_dir = d
+                template_count = count
+                break
+
+    needs_download = template_dir is None
+    needs_update = False
+    age_days = 0.0
+
+    if template_dir:
+        age_days = (time.time() - template_dir.stat().st_mtime) / 86400
+        needs_update = age_days > 7
+
+    if needs_download:
+        console.print(
+            "[bold yellow]⚠  Nuclei templates not found — downloading now...[/bold yellow]"
+        )
+    elif needs_update:
+        console.print(
+            f"[dim]Nuclei templates: {template_count:,} templates "
+            f"(last updated {age_days:.0f}d ago) — updating...[/dim]"
+        )
+    else:
+        console.print(
+            f"[dim]Nuclei templates: [green]{template_count:,}[/green] templates ready "
+            f"({age_days:.0f}d old)[/dim]"
+        )
+        return True
+
+    # Run nuclei -update-templates
+    console.print(f"  [dim]Running: {binary} -update-templates[/dim]")
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            binary, "-update-templates",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT,
+        )
+        stdout, _ = await asyncio.wait_for(proc.communicate(), timeout=300)
+        output = stdout.decode(errors="replace").strip()
+        if proc.returncode == 0:
+            console.print("[green]  ✓ Nuclei templates updated successfully[/green]")
+            return True
+        else:
+            console.print(
+                f"[yellow]  ⚠ Template update exited {proc.returncode}[/yellow]\n"
+                f"  [dim]{output[:300]}[/dim]"
+            )
+            return not needs_download  # usable if we had templates before
+    except asyncio.TimeoutError:
+        console.print("[red]  ✗ Template download timed out (300s)[/red]")
+        return not needs_download
+    except Exception as exc:
+        console.print(f"[red]  ✗ Template update failed: {exc}[/red]")
+        return not needs_download
+
+
 def print_startup_notification(outdated: list[dict], cve_total: int, last_cve_update: str):
     if not outdated and not last_cve_update:
         return

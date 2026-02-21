@@ -28,6 +28,7 @@ from core.updater import (
     update_cve_mapping,
     update_tool_sources,
     get_full_cve_map,
+    ensure_nuclei_templates,
 )
 
 from wrappers.nmap import NmapTool
@@ -346,6 +347,14 @@ async def _run(args: argparse.Namespace):
 
     # Full CVE map (static + discovered)
     full_cve_map = get_full_cve_map(CONFIG_FILE)
+
+    # ── Auto-ensure nuclei templates (download/update if needed) ─────
+    if "nuclei" in requested:
+        nuclei_bin = resolve_binary("nuclei", binaries)
+        if nuclei_bin:
+            await ensure_nuclei_templates(nuclei_bin)
+        else:
+            console.print("[dim]Nuclei binary not found — skipping template check[/dim]")
 
     # ── Phase 0 ─────────────────────────────────────────────────────
     phase0 = []
