@@ -727,13 +727,52 @@ print(f'  {n}/{len(binaries)} tools ready')
 PYEOF
 fi
 
-# ── Step 5: Update nuclei templates ───────────────────────────────────────────
+# ── Step 5: Download nuclei templates ────────────────────────────────────────
+step "Setting up nuclei templates"
+
 NUCLEI_BIN=""
-command -v nuclei &>/dev/null && NUCLEI_BIN=$(command -v nuclei)
-[[ -z "$NUCLEI_BIN" && -f "bin/nuclei" ]] && NUCLEI_BIN="bin/nuclei"
+command -v nuclei &>/dev/null       && NUCLEI_BIN=$(command -v nuclei)
+[[ -z "$NUCLEI_BIN" && -x "bin/nuclei" ]] && NUCLEI_BIN="$(pwd)/bin/nuclei"
+
 if [[ -n "$NUCLEI_BIN" ]]; then
-  step "Updating nuclei templates (CVE coverage)"
-  "$NUCLEI_BIN" -update-templates -silent 2>/dev/null && ok "Templates updated" || warn "Templates update skipped"
+  # Check if templates already exist with enough files
+  NUCLEI_TMPL_COUNT=0
+  for tdir in \
+    "$HOME/.local/nuclei-templates" \
+    "$HOME/nuclei-templates" \
+    "/usr/share/nuclei-templates" \
+    "/opt/nuclei-templates"; do
+    if [[ -d "$tdir" ]]; then
+      NUCLEI_TMPL_COUNT=$(find "$tdir" -name "*.yaml" 2>/dev/null | wc -l)
+      if [[ "$NUCLEI_TMPL_COUNT" -gt 100 ]]; then
+        ok "Nuclei templates: ${NUCLEI_TMPL_COUNT} templates already at $tdir"
+        break
+      fi
+    fi
+  done
+
+  if [[ "$NUCLEI_TMPL_COUNT" -le 100 ]]; then
+    info "Nuclei templates missing or incomplete — downloading now..."
+    info "This may take 3-10 minutes depending on internet speed..."
+    "$NUCLEI_BIN" -update-templates 2>&1
+    # Recount after download
+    NUCLEI_TMPL_COUNT=0
+    for tdir in \
+      "$HOME/.local/nuclei-templates" \
+      "$HOME/nuclei-templates" \
+      "/usr/share/nuclei-templates"; do
+      if [[ -d "$tdir" ]]; then
+        NUCLEI_TMPL_COUNT=$(find "$tdir" -name "*.yaml" 2>/dev/null | wc -l)
+        if [[ "$NUCLEI_TMPL_COUNT" -gt 100 ]]; then
+          ok "Nuclei templates downloaded: ${NUCLEI_TMPL_COUNT} templates at $tdir"
+          break
+        fi
+      fi
+    done
+    [[ "$NUCLEI_TMPL_COUNT" -le 100 ]] && err "Nuclei template download failed — check internet connection"
+  fi
+else
+  warn "Nuclei binary not found — skipping template download"
 fi
 
 # ── Step 5b: Wordlists — SecLists + bundled fallback ─────────────────────────
@@ -813,34 +852,206 @@ fi
 
 [[ $SECLISTS_OK -eq 0 ]] && warn "SecLists not installed — feroxbuster will use bundled fallback wordlist"
 
-# ── Step 6: Verify ────────────────────────────────────────────────────────────
-step "Verifying installation"
-"$CRUSHGEAR_PY" crushgear.py --check 2>/dev/null || $PY crushgear.py --check 2>/dev/null || warn "Verification skipped (rich module issue)"
+# ── Step 6: Comprehensive Validation ─────────────────────────────────────────
+step "Validating all tools & dependencies"
+echo
 
-# ── Summary ───────────────────────────────────────────────────────────────────
-MISSING_TOOLS=()
-command -v nxc &>/dev/null         || [[ -x "bin/nxc" ]]         || MISSING_TOOLS+=("netexec")
-[[ $NO_MSF -eq 0 ]] && ! command -v msfconsole &>/dev/null && ! [[ -x "bin/msfconsole" ]] && MISSING_TOOLS+=("metasploit")
+# Helper: find binary (system PATH or project bin/)
+_find_bin() {
+  local name="$1"
+  if command -v "$name" &>/dev/null; then
+    command -v "$name"
+  elif [[ -x "bin/$name" ]]; then
+    echo "$(pwd)/bin/$name"
+  else
+    echo ""
+  fi
+}
 
-if [[ ${#MISSING_TOOLS[@]} -gt 0 ]]; then
-  echo
-  echo -e "${YELLOW}╔══════════════════════════════════════════════════════════╗${NC}"
-  echo -e "${YELLOW}║  Some tools still missing:                               ║${NC}"
-  echo -e "${YELLOW}╠══════════════════════════════════════════════════════════╣${NC}"
-  for t in "${MISSING_TOOLS[@]}"; do
-    case "$t" in
-      netexec)
-        echo -e "${YELLOW}║  netexec: try 'pipx install netexec --python python3.12' ║${NC}"
-        ;;
-      metasploit)
-        echo -e "${YELLOW}║  metasploit: try 'brew install --cask metasploit'        ║${NC}"
-        ;;
-    esac
-  done
-  echo -e "${YELLOW}║                                                          ║${NC}"
-  echo -e "${YELLOW}║  Then re-run:  bash install.sh --fix                     ║${NC}"
-  echo -e "${YELLOW}╚══════════════════════════════════════════════════════════╝${NC}"
+# Helper: get version string from binary
+_get_ver() {
+  local bin="$1"; local flag="${2:---version}"
+  "$bin" "$flag" 2>&1 | grep -oP 'v?\d+\.\d+[\d.]*' | head -1
+}
+
+# Helper: print status row
+# _row "TOOL" "STATUS_COLOR" "STATUS_TEXT" "DETAIL"
+_row() {
+  local tool="$1" color="$2" status="$3" detail="$4"
+  printf "  %-14s  ${color}%-10s${NC}  %s\n" "$tool" "$status" "$detail"
+}
+
+PASS="${GREEN}"; WARN="${YELLOW}"; FAIL="${RED}"
+ALL_OK=1
+
+echo -e "${BOLD}╔══════════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BOLD}║               CrushGear — Tool Validation Report                ║${NC}"
+echo -e "${BOLD}╠══════════════════════════════════════════════════════════════════╣${NC}"
+echo
+
+# ── 1. nmap ──────────────────────────────────────────────────────────────────
+BIN=$(_find_bin nmap)
+if [[ -n "$BIN" ]]; then
+  VER=$(_get_ver "$BIN" "--version")
+  _row "nmap" "$PASS" "OK" "$VER  ($BIN)"
+else
+  _row "nmap" "$FAIL" "MISSING" "install: apt install nmap"
+  ALL_OK=0
 fi
+
+# ── 2. amass ─────────────────────────────────────────────────────────────────
+BIN=$(_find_bin amass)
+if [[ -n "$BIN" ]]; then
+  VER=$(_get_ver "$BIN" "-version" 2>/dev/null || _get_ver "$BIN" "--version")
+  _row "amass" "$PASS" "OK" "$VER  ($BIN)"
+else
+  _row "amass" "$WARN" "MISSING" "run: bash install.sh --fix"
+  ALL_OK=0
+fi
+
+# ── 3. httpx ─────────────────────────────────────────────────────────────────
+BIN=$(_find_bin httpx)
+if [[ -n "$BIN" ]]; then
+  VER=$(_get_ver "$BIN" "-version")
+  _row "httpx" "$PASS" "OK" "$VER  ($BIN)"
+else
+  _row "httpx" "$WARN" "MISSING" "run: bash install.sh --fix"
+  ALL_OK=0
+fi
+
+# ── 4. netexec (nxc) ─────────────────────────────────────────────────────────
+BIN=$(_find_bin nxc)
+if [[ -n "$BIN" ]]; then
+  VER=$(_get_ver "$BIN" "--version")
+  _row "netexec" "$PASS" "OK" "$VER  ($BIN)"
+else
+  _row "netexec" "$FAIL" "MISSING" "pipx install netexec --python python3.12"
+  ALL_OK=0
+fi
+
+# ── 5. smbmap ────────────────────────────────────────────────────────────────
+BIN=$(_find_bin smbmap)
+if [[ -n "$BIN" ]]; then
+  VER=$("$BIN" --version 2>&1 | grep -oP 'v?\d+\.\d+[\d.]*' | head -1)
+  [[ -z "$VER" ]] && VER="installed"
+  _row "smbmap" "$PASS" "OK" "$VER  ($BIN)"
+else
+  _row "smbmap" "$WARN" "MISSING" "run: bash install.sh --fix"
+  ALL_OK=0
+fi
+
+# ── 6. nuclei + templates ─────────────────────────────────────────────────────
+BIN=""
+command -v nuclei &>/dev/null       && BIN=$(command -v nuclei)
+[[ -z "$BIN" && -x "bin/nuclei" ]]  && BIN="$(pwd)/bin/nuclei"
+
+if [[ -n "$BIN" ]]; then
+  VER=$(_get_ver "$BIN" "-version")
+  # Count templates
+  TMPL_COUNT=0; TMPL_DIR=""
+  for tdir in \
+    "$HOME/.local/nuclei-templates" \
+    "$HOME/nuclei-templates" \
+    "/usr/share/nuclei-templates" \
+    "/opt/nuclei-templates"; do
+    if [[ -d "$tdir" ]]; then
+      CNT=$(find "$tdir" -name "*.yaml" 2>/dev/null | wc -l)
+      if [[ "$CNT" -gt "$TMPL_COUNT" ]]; then
+        TMPL_COUNT="$CNT"; TMPL_DIR="$tdir"
+      fi
+    fi
+  done
+
+  if [[ "$TMPL_COUNT" -gt 100 ]]; then
+    _row "nuclei" "$PASS" "OK" "$VER  |  ${TMPL_COUNT} templates at $TMPL_DIR"
+  else
+    _row "nuclei" "$WARN" "NO TMPL" "$VER binary OK but templates missing — run: $BIN -update-templates"
+    ALL_OK=0
+  fi
+else
+  _row "nuclei" "$FAIL" "MISSING" "run: bash install.sh --fix"
+  ALL_OK=0
+fi
+
+# ── 7. feroxbuster ───────────────────────────────────────────────────────────
+BIN=$(_find_bin feroxbuster)
+if [[ -n "$BIN" ]]; then
+  VER=$(_get_ver "$BIN" "--version")
+  # Find active wordlist
+  ACTIVE_WL=""
+  for wl in \
+    "/usr/share/seclists/Discovery/Web-Content/raft-small-directories.txt" \
+    "/usr/share/seclists/Discovery/Web-Content/big.txt" \
+    "/usr/share/wordlists/dirb/big.txt" \
+    "/usr/share/wordlists/dirb/common.txt" \
+    "wordlists/common.txt"; do
+    if [[ -f "$wl" ]]; then
+      WL_LINES=$(wc -l < "$wl" 2>/dev/null)
+      ACTIVE_WL="$wl (${WL_LINES} lines)"
+      break
+    fi
+  done
+  if [[ -n "$ACTIVE_WL" ]]; then
+    _row "feroxbuster" "$PASS" "OK" "$VER  |  wordlist: $ACTIVE_WL"
+  else
+    _row "feroxbuster" "$WARN" "NO WLIST" "$VER binary OK but no wordlist found — run: apt install seclists"
+    ALL_OK=0
+  fi
+else
+  _row "feroxbuster" "$WARN" "MISSING" "run: bash install.sh --fix"
+  ALL_OK=0
+fi
+
+# ── 8. metasploit ────────────────────────────────────────────────────────────
+BIN=""
+command -v msfconsole &>/dev/null       && BIN=$(command -v msfconsole)
+[[ -z "$BIN" && -x "bin/msfconsole" ]] && BIN="$(pwd)/bin/msfconsole"
+if [[ -n "$BIN" ]]; then
+  VER=$("$BIN" --version 2>/dev/null | grep -oP 'v?\d+\.\d+[\d.]*' | head -1 || echo "installed")
+  _row "metasploit" "$PASS" "OK" "$VER  ($BIN)"
+else
+  if [[ $NO_MSF -eq 1 ]]; then
+    _row "metasploit" "$WARN" "SKIPPED" "skipped via --no-msf flag"
+  else
+    _row "metasploit" "$WARN" "MISSING" "brew install --cask metasploit  OR  bash install.sh --full"
+    ALL_OK=0
+  fi
+fi
+
+echo
+echo -e "${BOLD}╠══════════════════════════════════════════════════════════════════╣${NC}"
+
+# ── SecLists status ───────────────────────────────────────────────────────────
+if [[ $SECLISTS_OK -eq 1 ]]; then
+  WL_COUNT=$(find "$SECLISTS_DIR/Discovery/Web-Content" -name "*.txt" 2>/dev/null | wc -l)
+  _row "seclists" "$PASS" "OK" "${WL_COUNT} wordlists at $SECLISTS_DIR"
+else
+  _row "seclists" "$WARN" "MISSING" "apt install seclists  (feroxbuster will use bundled fallback)"
+fi
+
+# ── Nuclei templates quick summary ───────────────────────────────────────────
+FINAL_TMPL=0
+for tdir in "$HOME/.local/nuclei-templates" "$HOME/nuclei-templates" "/usr/share/nuclei-templates"; do
+  [[ -d "$tdir" ]] && CNT=$(find "$tdir" -name "*.yaml" 2>/dev/null | wc -l) && [[ "$CNT" -gt "$FINAL_TMPL" ]] && FINAL_TMPL="$CNT"
+done
+if [[ "$FINAL_TMPL" -gt 100 ]]; then
+  _row "nuclei-tmpl" "$PASS" "OK" "${FINAL_TMPL} templates ready"
+else
+  _row "nuclei-tmpl" "$FAIL" "MISSING" "run: $(pwd)/bin/nuclei -update-templates"
+  ALL_OK=0
+fi
+
+echo
+echo -e "${BOLD}╠══════════════════════════════════════════════════════════════════╣${NC}"
+
+# ── Final verdict ─────────────────────────────────────────────────────────────
+if [[ $ALL_OK -eq 1 ]]; then
+  echo -e "${BOLD}${GREEN}║  RESULT: ALL SYSTEMS GO — CrushGear is ready to run!            ║${NC}"
+else
+  echo -e "${BOLD}${YELLOW}║  RESULT: Some issues found — see warnings above                  ║${NC}"
+  echo -e "${BOLD}${YELLOW}║  Re-run:  bash install.sh --fix                                  ║${NC}"
+fi
+echo -e "${BOLD}╚══════════════════════════════════════════════════════════════════╝${NC}"
 
 # ── Done ──────────────────────────────────────────────────────────────────────
 echo
