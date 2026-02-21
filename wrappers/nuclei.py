@@ -150,86 +150,121 @@ class NucleiTool(BaseTool):
         amass_hosts = self.feed.get("hosts", [])
         nmap_data   = self.feed.get("nmap", {})
 
-        # ── Build web targets ────────────────────────────────────────
+        # ── Web targets ──────────────────────────────────────────────
+        # Source priority: httpx live URLs → amass hosts → raw IPs from target
         web_targets: list[str] = []
 
         if httpx_urls:
-            web_targets = httpx_urls
+            # httpx already confirmed these URLs are alive — best source
+            web_targets = httpx_urls[:100]
         elif amass_hosts:
-            for h in amass_hosts:
-                web_targets.append(f"http://{h}")
-                web_targets.append(f"https://{h}")
-        elif t.type == TargetType.CIDR:
-            for ip in t.hosts[:254]:
-                web_targets.append(f"http://{ip}")
-                web_targets.append(f"https://{ip}")
+            for h in amass_hosts[:50]:
+                web_targets += [f"http://{h}", f"https://{h}"]
         elif t.type == TargetType.URL:
             web_targets = [t.url]
+        elif t.type == TargetType.CIDR:
+            # Probe common web ports on each host in the subnet
+            for ip in t.hosts[:254]:
+                web_targets += [
+                    f"http://{ip}",
+                    f"https://{ip}",
+                    f"http://{ip}:8080",
+                    f"https://{ip}:8443",
+                    f"http://{ip}:8888",
+                    f"http://{ip}:9090",
+                ]
         else:
-            web_targets = [f"http://{t.host}", f"https://{t.host}"]
+            # Single IP or domain — probe common web ports
+            h = t.host
+            web_targets = [
+                f"http://{h}",
+                f"https://{h}",
+                f"http://{h}:8080",
+                f"https://{h}:8443",
+                f"http://{h}:8888",
+                f"http://{h}:9090",
+            ]
 
-        # ── Build network targets from nmap open ports ───────────────
-        net_targets = _build_network_targets(nmap_data)
+        # ── Network targets (ip:port) ────────────────────────────────
+        # Source priority: nmap-confirmed open ports → fallback common ports.
+        # ip:port format triggers nuclei NETWORK templates (SMB, RDP, SSH, etc.)
+        # This is what makes nuclei work for non-web infrastructure scans.
+        net_targets: list[str] = []
 
-        # Merge: web first, then network-level ip:port
+        if nmap_data:
+            # Best: use only ports nmap confirmed open (faster, no wasted scans)
+            net_targets = _build_network_targets(nmap_data)
+        else:
+            # Fallback: if nmap hasn't run yet, probe ALL common network ports
+            # on every host so nuclei still runs network templates automatically
+            hosts: list[str] = []
+            if t.type == TargetType.CIDR:
+                hosts = [str(ip) for ip in t.hosts[:254]]
+            elif t.type != TargetType.URL:
+                hosts = [t.host]
+
+            for h in hosts:
+                for port in NETWORK_PORTS:          # NETWORK_PORTS is a dict: port→label
+                    net_targets.append(f"{h}:{port}")
+
+        # Merge: web targets first, then network ip:port targets
         all_targets = web_targets + net_targets
-
         target_file = Path(tempfile.mktemp(prefix="crushgear_nuclei_", suffix=".txt"))
         target_file.write_text("\n".join(all_targets) + "\n")
 
-        # ── Resolve template directory ───────────────────────────────
-        # CRITICAL: -t MUST come before -as / -tags / -etags so nuclei knows
-        # WHERE to load templates from before applying any filters.
-        # Without -t first, nuclei v3 searches its config path (may differ),
-        # causing templates:0 even when templates exist at another path.
+        # ── Template directory ───────────────────────────────────────
+        # CRITICAL: -t must come FIRST before -tags / -etags so nuclei knows
+        # WHERE to load templates from before applying tag filters.
         template_dir = _find_template_dir()
 
-        # Build command with -t FIRST (template path before all filters)
         cmd = [self.binary, "-list", str(target_file)]
 
-        # Inject template path immediately — must precede -as, -tags, -etags
         if template_dir:
-            cmd += ["-t", template_dir]
+            cmd += ["-t", template_dir]         # always first — fixes templates:0
+
+        # ── Auto-scan (-as) — conditional ────────────────────────────
+        # -as uses Wappalyzer tech detection to auto-select templates.
+        # POWERFUL for web targets (detects WordPress/Tomcat/etc → exact templates).
+        # USELESS for IP/CIDR (Wappalyzer needs HTTP — returns nothing on SMB/RDP).
+        # So: enable -as only when target has web context (URL or domain).
+        has_web_context = (
+            t.type == TargetType.URL
+            or (t.type not in (TargetType.CIDR,) and not t.host.replace(".", "").isdigit())
+            or bool(httpx_urls)     # httpx found live web services → worth auto-scanning
+        )
+        if has_web_context:
+            cmd += ["-as"]          # tech fingerprint → exact template match
 
         cmd += [
-            # ── Template source ──────────────────────────────────────
-            # -as: Wappalyzer tech detection → auto-selects matching
-            #      templates (WordPress → wp-plugin templates, etc.)
-            #      Works additively with -tags (union of both sets).
-            "-as",
-
-            # -etags: exclude destructive / noisy categories explicitly.
-            "-etags",       "dos,bruteforce,fuzz",
-
-            # Severity: include low (misconfigs/exposures are often low)
+            # ── Template filters ─────────────────────────────────────
+            # -tags loads ALL matching templates regardless of tech detection.
+            # Combined with -as (when enabled): UNION of both sets → max coverage.
+            "-etags",       "dos,bruteforce,fuzz",  # skip destructive/noisy
             "-severity",    "critical,high,medium,low",
-
-            # All validated tags (see constants above)
-            "-tags",        ALL_TAGS,
+            "-tags",        ALL_TAGS,               # web + network tags combined
 
             # ── Output ──────────────────────────────────────────────
-            "-jsonl",                # one JSON per line (required by feed parser)
-            "-silent",               # suppress banner/info messages
-            # NOTE: -ot is NOT a valid nuclei v3 flag — removed to prevent silent exit
+            "-jsonl",                # one JSON object per line
+            "-silent",               # suppress nuclei banner
 
             # ── Progress ─────────────────────────────────────────────
-            "-stats",                # show live scan statistics
-            "-stats-interval", "30", # update every 30s
+            "-stats",
+            "-stats-interval", "30",
 
             # ── Performance ─────────────────────────────────────────
-            "-c",              "30", # concurrent templates
-            "-bulk-size",      "25", # targets per template batch
-            "-rate-limit",    "150", # max requests/sec
-            "-ss",    "host-spray",  # run all templates per host (better mem mgmt)
+            "-c",              "30", # parallel template execution
+            "-bulk-size",      "25", # targets per batch
+            "-rate-limit",    "150", # req/sec cap (avoids overloading target)
+            "-ss",    "host-spray",  # all templates per host (saves memory)
 
             # ── Reliability ─────────────────────────────────────────
-            "-retries",         "2", # retry failed requests
+            "-retries",         "2",
             "-timeout",        "10", # seconds per request
-            "-max-host-error", "30", # skip host after N errors
+            "-max-host-error", "30", # skip host after 30 consecutive errors
 
-            # ── Accuracy ────────────────────────────────────────────
+            # ── Misc ────────────────────────────────────────────────
             "-fr",                   # follow HTTP redirects
-            "-duc",                  # disable auto update-check during scan
+            "-duc",                  # skip update-check during scan
         ]
 
         return cmd
