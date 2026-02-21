@@ -546,11 +546,14 @@ async def ensure_nuclei_templates(binary: str) -> bool:
     Returns True if templates are ready to use.
     """
     # Nuclei v3 default template locations (in priority order)
+    # Must match _find_template_dir() in wrappers/nuclei.py
     template_dirs = [
-        Path.home() / ".local" / "nuclei-templates",
-        Path.home() / "nuclei-templates",
-        Path("/usr/share/nuclei-templates"),
-        Path("/opt/nuclei-templates"),
+        Path.home() / ".local" / "nuclei-templates",           # v3 default (most common)
+        Path.home() / ".local" / "share" / "nuclei-templates", # XDG compliant path
+        Path.home() / "nuclei-templates",                       # manual / older install
+        Path.home() / ".config" / "nuclei" / "templates",      # some v3 variants
+        Path("/usr/share/nuclei-templates"),                    # system-wide
+        Path("/opt/nuclei-templates"),                          # custom install
     ]
 
     template_dir: Optional[Path] = None

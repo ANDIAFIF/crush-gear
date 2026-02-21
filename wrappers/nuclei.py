@@ -8,20 +8,23 @@ def _find_template_dir() -> str:
     """
     Detect nuclei templates directory.
     Returns the first valid path with >100 .yaml files, or empty string.
-    Nuclei v3 default: ~/.local/nuclei-templates
+    Covers nuclei v3 default paths across distributions.
     """
     candidates = [
-        Path.home() / ".local" / "nuclei-templates",
-        Path.home() / "nuclei-templates",
-        Path("/usr/share/nuclei-templates"),
-        Path("/opt/nuclei-templates"),
+        Path.home() / ".local" / "nuclei-templates",          # nuclei v3 default (most common)
+        Path.home() / ".local" / "share" / "nuclei-templates", # XDG compliant path
+        Path.home() / "nuclei-templates",                      # older / manual install
+        Path.home() / ".config" / "nuclei" / "templates",      # some v3 variants
+        Path("/usr/share/nuclei-templates"),                    # system-wide install
+        Path("/opt/nuclei-templates"),                          # custom install
     ]
+    best: tuple[str, int] = ("", 0)
     for d in candidates:
         if d.exists() and d.is_dir():
             count = sum(1 for _ in d.rglob("*.yaml"))
-            if count > 100:
-                return str(d)
-    return ""
+            if count > best[1]:
+                best = (str(d), count)
+    return best[0]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Tags validated against nuclei-templates TEMPLATES-STATS.md (Feb 2026)
@@ -219,52 +222,47 @@ class NucleiTool(BaseTool):
 
         cmd = [self.binary, "-list", str(target_file)]
 
+        # ── Template directory (CRITICAL — must be explicit) ─────────
+        # WARNING: flag -as (auto-scan) overrides -t and relies on Wappalyzer
+        # tech-detection. If the target has WAF/firewall (very common), Wappalyzer
+        # gets blocked → 0 technology detected → 0 templates loaded (templates:0 bug).
+        # FIX: Never use -as. Always load templates via -t + -tags explicitly.
         if template_dir:
-            cmd += ["-t", template_dir]         # always first — fixes templates:0
-
-        # ── Auto-scan (-as) — conditional ────────────────────────────
-        # -as uses Wappalyzer tech detection to auto-select templates.
-        # POWERFUL for web targets (detects WordPress/Tomcat/etc → exact templates).
-        # USELESS for IP/CIDR (Wappalyzer needs HTTP — returns nothing on SMB/RDP).
-        # So: enable -as only when target has web context (URL or domain).
-        has_web_context = (
-            t.type == TargetType.URL
-            or (t.type not in (TargetType.CIDR,) and not t.host.replace(".", "").isdigit())
-            or bool(httpx_urls)     # httpx found live web services → worth auto-scanning
-        )
-        if has_web_context:
-            cmd += ["-as"]          # tech fingerprint → exact template match
+            cmd += ["-t", template_dir]
+        # If no explicit template dir found, nuclei will use its own default.
+        # Either way, -tags below guarantees the right templates are selected.
 
         cmd += [
-            # ── Template filters ─────────────────────────────────────
-            # -tags loads ALL matching templates regardless of tech detection.
-            # Combined with -as (when enabled): UNION of both sets → max coverage.
-            "-etags",       "dos,bruteforce,fuzz",  # skip destructive/noisy
+            # ── Template selection ────────────────────────────────────
+            # -tags: select templates by tag — always works regardless of tech detection.
+            # -etags: exclude destructive tags (dos, bruteforce, fuzz).
+            # -severity: skip informational to reduce noise.
+            "-tags",        ALL_TAGS,
+            "-etags",       "dos,bruteforce,fuzz",
             "-severity",    "critical,high,medium,low",
-            "-tags",        ALL_TAGS,               # web + network tags combined
 
-            # ── Output ──────────────────────────────────────────────
-            "-jsonl",                # one JSON object per line
-            "-silent",               # suppress nuclei banner
+            # ── Output ───────────────────────────────────────────────
+            "-jsonl",                # one JSON object per finding
+            "-silent",               # suppress nuclei banner/logo
 
             # ── Progress ─────────────────────────────────────────────
             "-stats",
             "-stats-interval", "30",
 
-            # ── Performance ─────────────────────────────────────────
-            "-c",              "30", # parallel template execution
+            # ── Performance ──────────────────────────────────────────
+            "-c",              "25", # concurrent template execution
             "-bulk-size",      "25", # targets per batch
-            "-rate-limit",    "150", # req/sec cap (avoids overloading target)
-            "-ss",    "host-spray",  # all templates per host (saves memory)
+            "-rate-limit",    "100", # req/sec (conservative for external targets)
+            "-ss",    "host-spray",  # all templates per host (memory efficient)
 
-            # ── Reliability ─────────────────────────────────────────
+            # ── Reliability ───────────────────────────────────────────
             "-retries",         "2",
             "-timeout",        "10", # seconds per request
             "-max-host-error", "30", # skip host after 30 consecutive errors
 
-            # ── Misc ────────────────────────────────────────────────
+            # ── Misc ─────────────────────────────────────────────────
             "-fr",                   # follow HTTP redirects
-            "-duc",                  # skip update-check during scan
+            "-duc",                  # disable update-check during scan
         ]
 
         return cmd
