@@ -40,6 +40,10 @@ class HttpxTool(BaseTool):
                     f"https://{ip}",
                     f"http://{ip}:8080",
                     f"http://{ip}:8443",
+                    f"http://{ip}:8888",
+                    f"http://{ip}:9090",
+                    f"http://{ip}:3000",
+                    f"http://{ip}:5000",
                 ]
             url_file = Path(tempfile.mktemp(prefix="crushgear_httpx_", suffix=".txt"))
             url_file.write_text("\n".join(lines) + "\n")
@@ -58,6 +62,9 @@ class HttpxTool(BaseTool):
                 f"http://{host}:8443",
                 f"http://{host}:8888",
                 f"http://{host}:9090",
+                f"http://{host}:3000",
+                f"http://{host}:5000",
+                f"http://{host}:10000",
             ]
             url_file = Path(tempfile.mktemp(prefix="crushgear_httpx_", suffix=".txt"))
             url_file.write_text("\n".join(lines) + "\n")
@@ -67,32 +74,33 @@ class HttpxTool(BaseTool):
             self.binary,
             *target_args,
 
-            # ── Probes ───────────────────────────────────────────────
-            # NOTE: httpx v1.2+ renamed flags:
-            #   -threads      → -c  (old flag removed in newer builds)
-            #   -status-code  → -sc
-            #   -tech-detect  → -td
-            #   -web-server   → -server
-            #   -content-length→ -cl
-            #   -follow-redirects → -fr
-            #   -json / -jsonl → -j  (stable alias)
-            "-title",
-            "-sc",          # status code
-            "-td",          # tech detection (Wappalyzer)
-            "-server",      # web server banner
-            "-cl",          # content length
-            "-ip",          # resolved IP
-            "-cdn",         # CDN detection
-            "-fr",          # follow redirects
-            "-maxr", "5",   # max redirects
+            # ── Service Discovery ────────────────────────────────────
+            "-title",            # page title
+            "-sc",               # HTTP status code
+            "-td",               # tech detection (Wappalyzer fingerprint)
+            "-server",           # web server banner (Apache, nginx, IIS, etc.)
+            "-cl",               # content length
+            "-ct",               # content type
+            "-ip",               # resolved IP address
+            "-cdn",              # CDN detection (Cloudflare, Akamai, etc.)
+            "-cname",            # CNAME record (useful for subdomain takeover)
+            "-probe",            # HTTP/HTTPS probe status for each URL
+            "-favicon",          # favicon MMH3 hash (identifies tech/framework)
+            "-hash", "md5",      # page body MD5 hash (detect duplicates)
+            "-jarm",             # JARM TLS fingerprint (identify TLS stack)
+            "-tls-probe",        # probe HTTPS even if 443 not in URL
+
+            # ── Request handling ─────────────────────────────────────
+            "-fr",               # follow HTTP redirects
+            "-maxr", "5",        # max redirects to follow
+            "-random-agent",     # rotate user-agent per request
 
             # ── Output ───────────────────────────────────────────────
-            "-j",           # JSONL output (stable across versions)
-            "-silent",
+            "-j",                # JSONL output (one JSON object per line)
+            "-silent",           # suppress banner/info messages
 
             # ── Performance ─────────────────────────────────────────
-            "-c",      "50",    # concurrency (-threads is DEPRECATED)
-            "-timeout", "10",
-            "-retries", "2",
-            "-random-agent",
+            "-c",      "50",     # concurrency (threads)
+            "-timeout", "10",    # per-request timeout in seconds
+            "-retries", "2",     # retry failed requests
         ]

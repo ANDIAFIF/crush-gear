@@ -3,6 +3,26 @@ from pathlib import Path
 from wrappers.base import BaseTool
 from core.target import TargetType
 
+
+def _find_template_dir() -> str:
+    """
+    Detect nuclei templates directory.
+    Returns the first valid path with >100 .yaml files, or empty string.
+    Nuclei v3 default: ~/.local/nuclei-templates
+    """
+    candidates = [
+        Path.home() / ".local" / "nuclei-templates",
+        Path.home() / "nuclei-templates",
+        Path("/usr/share/nuclei-templates"),
+        Path("/opt/nuclei-templates"),
+    ]
+    for d in candidates:
+        if d.exists() and d.is_dir():
+            count = sum(1 for _ in d.rglob("*.yaml"))
+            if count > 100:
+                return str(d)
+    return ""
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Tags validated against nuclei-templates TEMPLATES-STATS.md (Feb 2026)
 # Reference: https://github.com/projectdiscovery/nuclei-templates
@@ -157,18 +177,23 @@ class NucleiTool(BaseTool):
         target_file = Path(tempfile.mktemp(prefix="crushgear_nuclei_", suffix=".txt"))
         target_file.write_text("\n".join(all_targets) + "\n")
 
-        return [
+        # ── Resolve template directory ───────────────────────────────
+        # Always pass -t explicitly so nuclei never searches in the wrong path.
+        # Fallback: if no local templates found, -update-templates should have
+        # been run already by ensure_nuclei_templates() in crushgear.py.
+        template_dir = _find_template_dir()
+
+        cmd = [
             self.binary,
             "-list",        str(target_file),
 
-            # ── Template selection ───────────────────────────────────
+            # ── Template source ──────────────────────────────────────
             # -as: Wappalyzer tech detection → auto-selects matching
             #      templates (WordPress → wp-plugin templates, etc.)
             #      Works additively with -tags (union of both sets).
             "-as",
 
             # -etags: exclude destructive / noisy categories explicitly.
-            # .nuclei-ignore excludes these by default but explicit is safer.
             "-etags",       "dos,bruteforce,fuzz",
 
             # Severity: include low (misconfigs/exposures are often low)
@@ -201,3 +226,9 @@ class NucleiTool(BaseTool):
             "-fr",                   # follow HTTP redirects
             "-duc",                  # disable auto update-check during scan
         ]
+
+        # Inject explicit template path if found — prevents templates:0 issue
+        if template_dir:
+            cmd += ["-t", template_dir]
+
+        return cmd
