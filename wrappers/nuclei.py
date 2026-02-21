@@ -178,15 +178,20 @@ class NucleiTool(BaseTool):
         target_file.write_text("\n".join(all_targets) + "\n")
 
         # ── Resolve template directory ───────────────────────────────
-        # Always pass -t explicitly so nuclei never searches in the wrong path.
-        # Fallback: if no local templates found, -update-templates should have
-        # been run already by ensure_nuclei_templates() in crushgear.py.
+        # CRITICAL: -t MUST come before -as / -tags / -etags so nuclei knows
+        # WHERE to load templates from before applying any filters.
+        # Without -t first, nuclei v3 searches its config path (may differ),
+        # causing templates:0 even when templates exist at another path.
         template_dir = _find_template_dir()
 
-        cmd = [
-            self.binary,
-            "-list",        str(target_file),
+        # Build command with -t FIRST (template path before all filters)
+        cmd = [self.binary, "-list", str(target_file)]
 
+        # Inject template path immediately — must precede -as, -tags, -etags
+        if template_dir:
+            cmd += ["-t", template_dir]
+
+        cmd += [
             # ── Template source ──────────────────────────────────────
             # -as: Wappalyzer tech detection → auto-selects matching
             #      templates (WordPress → wp-plugin templates, etc.)
@@ -205,7 +210,7 @@ class NucleiTool(BaseTool):
             # ── Output ──────────────────────────────────────────────
             "-jsonl",                # one JSON per line (required by feed parser)
             "-silent",               # suppress banner/info messages
-            "-ot",                   # omit base64 template blob (~40% smaller output)
+            # NOTE: -ot is NOT a valid nuclei v3 flag — removed to prevent silent exit
 
             # ── Progress ─────────────────────────────────────────────
             "-stats",                # show live scan statistics
@@ -226,9 +231,5 @@ class NucleiTool(BaseTool):
             "-fr",                   # follow HTTP redirects
             "-duc",                  # disable auto update-check during scan
         ]
-
-        # Inject explicit template path if found — prevents templates:0 issue
-        if template_dir:
-            cmd += ["-t", template_dir]
 
         return cmd
