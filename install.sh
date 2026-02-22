@@ -4,10 +4,13 @@
 # ║                                                                      ║
 # ║  Usage:                                                              ║
 # ║    bash install.sh          ← install semua (pre-built binaries)    ║
+# ║    bash install.sh --update ← git pull semua source + update CVE   ║
+# ║                               (AMAN — tidak hapus folder apapun)   ║
 # ║    bash install.sh --full   ← clone & build SEMUA dari source       ║
 # ║                               (metasploit ~1GB, full modules/CVEs)  ║
 # ║    bash install.sh --no-msf ← skip metasploit (lebih cepat)        ║
 # ║    bash install.sh --fix    ← re-install hanya tools yg MISSING    ║
+# ║    bash install.sh --full --force ← BAHAYA: hapus folder + re-clone ║
 # ╚══════════════════════════════════════════════════════════════════════╝
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,11 +20,13 @@ NO_MSF=0
 FULL=0
 FORCE=0
 FIX=0
+UPDATE=0
 for arg in "$@"; do
   [[ "$arg" == "--no-msf" ]] && NO_MSF=1
   [[ "$arg" == "--full"   ]] && FULL=1
   [[ "$arg" == "--force"  ]] && FORCE=1
   [[ "$arg" == "--fix"    ]] && FIX=1
+  [[ "$arg" == "--update" ]] && UPDATE=1
 done
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -552,7 +557,56 @@ export PATH="$HOME/.local/bin:$PATH"
 # IMPORTANT: set +e agar satu tool gagal TIDAK menghentikan yang lain
 set +e
 
-if [[ $FIX -eq 1 ]]; then
+if [[ $UPDATE -eq 1 ]]; then
+  # ── UPDATE MODE (AMAN — tidak hapus folder apapun) ────────────────────────
+  step "UPDATE MODE — git pull semua source tools + update CVE + update nuclei templates"
+  echo -e "  ${CYAN}Tidak ada folder yang dihapus. Gunakan --full --force jika ingin re-clone.${NC}"
+  echo
+
+  # Deteksi python
+  PY=$(detect_python)
+  if [[ -z "$PY" ]]; then
+    err "Python 3.9+ tidak ditemukan"
+    exit 1
+  fi
+  VENV_DIR="${SCRIPT_DIR}/.venv"
+  [[ -f "${VENV_DIR}/bin/python" ]] && PY="${VENV_DIR}/bin/python"
+
+  # 1. git pull semua source repos (via crushgear --update-tools)
+  step "1/3 — git pull semua source tools"
+  if "$PY" crushgear.py --update-tools 2>&1; then
+    ok "git pull selesai"
+  else
+    warn "Beberapa repo gagal di-pull (cek output di atas)"
+  fi
+
+  # 2. Update CVE → MSF mapping
+  step "2/3 — Update CVE → MSF mapping"
+  if "$PY" crushgear.py --update-cves 2>&1; then
+    ok "CVE mapping diperbarui"
+  else
+    warn "Update CVE gagal — cek koneksi internet"
+  fi
+
+  # 3. Update nuclei templates
+  step "3/3 — Update nuclei templates"
+  NUCLEI_BIN=""
+  command -v nuclei &>/dev/null      && NUCLEI_BIN=$(command -v nuclei)
+  [[ -z "$NUCLEI_BIN" && -x "bin/nuclei" ]] && NUCLEI_BIN="$(pwd)/bin/nuclei"
+  if [[ -n "$NUCLEI_BIN" ]]; then
+    "$NUCLEI_BIN" -update-templates 2>&1 | tail -5
+    ok "Nuclei templates diperbarui"
+  else
+    warn "Nuclei tidak ditemukan — skip template update"
+  fi
+
+  echo
+  echo -e "${BOLD}${GREEN}╔══════════════════════════════════════════════════════════╗${NC}"
+  echo -e "${BOLD}${GREEN}║  Update selesai! Tidak ada folder yang dihapus.          ║${NC}"
+  echo -e "${BOLD}${GREEN}╚══════════════════════════════════════════════════════════╝${NC}"
+  exit 0
+
+elif [[ $FIX -eq 1 ]]; then
   # ── FIX MODE ──────────────────────────────────────────────────────────────
   step "FIX MODE — Re-installing only MISSING tools"
 

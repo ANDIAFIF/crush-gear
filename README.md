@@ -9,7 +9,7 @@
   ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝
 ```
 
-> All-in-One Pentest Automation: nmap → amass + httpx → netexec + smbmap + nuclei + feroxbuster → metasploit
+> All-in-One Pentest Automation: nmap (2-phase) → amass + httpx → netexec + smbmap + nuclei + feroxbuster → metasploit
 
 ---
 
@@ -26,7 +26,24 @@ bash install.sh
 
 Selesai. Tidak perlu install apa-apa manual.
 
-### Mode 2 — FULL SOURCE (Metasploit + semua tools dari source)
+### Mode 2 — UPDATE (Aman, tanpa hapus folder)
+
+> Gunakan ini untuk memperbarui semua tools yang sudah ter-install.
+> **Tidak menghapus** folder git clone apapun.
+
+```bash
+cd tools-crushgear
+
+# Update semua: git pull source repos + update CVE mapping + update nuclei templates
+bash install.sh --update
+```
+
+Ini akan:
+- `git pull` semua source repo yang sudah di-clone (NetExec, amass, httpx, dll)
+- Update CVE → Metasploit mapping dari GitHub
+- Update nuclei templates (CVE templates terbaru)
+
+### Mode 3 — FULL SOURCE (Metasploit + semua tools dari source)
 
 > **Gunakan ini untuk metasploit lengkap** dengan semua exploit modules, payloads, CVE scanners, dll.
 > Butuh ~2-5 GB disk, Go 1.21+, Rust/cargo, Ruby 3.0+, git.
@@ -34,12 +51,16 @@ Selesai. Tidak perlu install apa-apa manual.
 ```bash
 cd tools-crushgear
 
-# Clone & build SEMUA dari GitHub source
+# Clone & build SEMUA dari GitHub source (git pull jika folder sudah ada)
 bash install.sh --full
-
-# Atau dengan force re-clone (hapus folder lama)
-bash install.sh --full --force
 ```
+
+> ⚠️  **PERINGATAN — `--force` menghapus folder!**
+> ```bash
+> bash install.sh --full --force   # ← HAPUS semua folder git clone, lalu re-clone dari awal
+> ```
+> Gunakan `--force` hanya jika folder corrupt atau ingin full re-clone.
+> Untuk update rutin, gunakan `bash install.sh --update` saja.
 
 Ini akan:
 - `git clone` metasploit-framework (semua exploit modules, payloads, post modules)
@@ -47,7 +68,7 @@ Ini akan:
 - Build semua dari source (Go / Rust / Ruby bundle install)
 - Update nuclei templates (semua CVE templates terbaru)
 
-### Mode 3 — Manual step by step
+### Mode 4 — Manual step by step
 
 ```bash
 cd tools-crushgear
@@ -65,7 +86,7 @@ python3 setup_tools.py --full
 python3 crushgear.py --check
 ```
 
-### Mode 4 — Fix missing tools only
+### Mode 5 — Fix missing tools only
 
 Jika ada tools yang MISSING setelah install, jalankan:
 
@@ -180,9 +201,10 @@ Target Input
     │
     ▼
 ┌──────────────────────────────────────────────────────────┐
-│  PHASE 0 — Port Scan                                     │
-│  nmap -sV -sC -O --open -p 50+ ports                     │
-│  → Output: port list, services, OS                       │
+│  PHASE 0 — Port Scan (2-Phase)                           │
+│  Step 1: nmap -p- --min-rate 2000 (fast SYN all 65535)  │
+│  Step 2: nmap -sV -sC -O pada port yang ditemukan saja  │
+│  → Output: port list, services, OS, product banners     │
 └─────────────────────┬────────────────────────────────────┘
                       │ FEED: open ports per host
                       ▼
@@ -208,9 +230,9 @@ Target Input
 │  PHASE 3 — Exploitation                                  │
 │  metasploit ← auto-pilih module dari CVE findings        │
 │    CVE-2017-0144 → ms17_010_eternalblue                  │
-│    CVE-2021-44228 → log4shell_header_injection           │
+│    CVE-2021-44228 → log4shell_header_injection (misc/)   │
 │    CVE-2021-26855 → exchange_proxylogon_rce              │
-│    ... 117+ CVEs mapped, + auto-discovered dari GitHub   │
+│    ... 188 CVEs mapped statik, + auto-discovered         │
 │  → Auto post-exploit: hashdump, cred dump, enum users    │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -238,12 +260,14 @@ results/
 
 ## Management Commands
 
-```bash
-# Lihat status semua binary
-python3 crushgear.py --check
+### Update (Aman — tidak hapus folder)
 
-# Bandingkan versi installed vs GitHub latest
-python3 crushgear.py --check-updates
+```bash
+# ✅ UPDATE SEMUA SEKALIGUS (recommended cara update rutin)
+# git pull source repos + update CVE mapping + update nuclei templates
+bash install.sh --update
+
+# Atau update satu per satu:
 
 # Update CVE → Metasploit mapping (dari GitHub)
 python3 crushgear.py --update-cves
@@ -251,22 +275,43 @@ python3 crushgear.py --update-cves
 # Update dengan GitHub token (rate limit lebih tinggi)
 python3 crushgear.py --update-cves --github-token ghp_xxxxx
 
-# git pull semua source tools (jika build dari source)
+# git pull semua source repos saja
 python3 crushgear.py --update-tools
+
+# Update CrushGear script itu sendiri
+python3 crushgear.py --update-script
+```
+
+### Diagnostik & Repair
+
+```bash
+# Lihat status semua binary
+python3 crushgear.py --check
+
+# Bandingkan versi installed vs GitHub latest
+python3 crushgear.py --check-updates
+
+# Re-install hanya tools yang MISSING (tidak menyentuh yang sudah OK)
+bash install.sh --fix
 
 # Reinstall/rebuild semua tools (pre-built binaries)
 python3 crushgear.py --setup
-# ATAU reinstall full source
-python3 setup_tools.py --full
-
-# Clone semua source saja, tanpa build (untuk inspeksi)
-python3 setup_tools.py --full --clone-only
-
-# Force re-clone semua (hapus folder lama)
-python3 setup_tools.py --full --force
 
 # Help lengkap
 python3 crushgear.py --help-full
+```
+
+### Re-clone (Gunakan hanya jika diperlukan)
+
+> ⚠️  **Perintah di bawah ini MENGHAPUS folder git clone secara permanen!**
+> Gunakan hanya jika folder corrupt, bukan untuk update rutin.
+
+```bash
+# Re-clone full source dari awal (HAPUS folder lama)
+bash install.sh --full --force
+
+# ATAU langsung via Python
+python3 setup_tools.py --full --force
 ```
 
 ---
@@ -279,34 +324,42 @@ CrushGear memiliki database CVE → MSF module:
 |----------|----------------|
 | Windows SMB (EternalBlue, MS08-067, dll) | 7 |
 | Active Directory (ZeroLogon, PrintNightmare, dll) | 5 |
-| Exchange (ProxyLogon, ProxyShell) | 7 |
+| Exchange (ProxyLogon, ProxyShell, ProxyNotShell) | 9 |
 | Log4Shell | 4 |
 | Spring Framework | 3 |
 | Confluence | 5 |
 | Apache HTTP / Struts | 9 |
-| VMware vCenter | 5 |
-| Citrix | 3 |
-| F5 BIG-IP | 3 |
-| Fortinet | 3 |
-| Pulse Secure / Ivanti | 4 |
+| VMware vCenter / ESXi | 6 |
+| Citrix / NetScaler | 5 |
+| F5 BIG-IP | 5 |
+| Fortinet | 5 |
+| Pulse Secure / Ivanti | 6 |
 | GitLab | 3 |
 | PHP | 3 |
-| WebLogic | 4 |
+| WebLogic | 5 |
 | Drupal | 3 |
 | Redis, Elasticsearch | 3 |
 | RDP (BlueKeep, DejaBlue) | 3 |
-| + banyak lagi... | 117 static + auto-discovered |
+| ProFTPD / VSFTPD / SSH | 5 |
+| Exim SMTP | 2 |
+| JetBrains TeamCity | 3 |
+| ConnectWise ScreenConnect | 2 |
+| 2024–2025 CVEs (PAN-OS, Jenkins, PHP CGI, dll) | 10+ |
+| + banyak lagi... | **188 static** + auto-discovered |
 
 ### Update CVE mapping
 
 ```bash
-# Fetch CVE baru dari nuclei-templates + MSF search
+# Update CVE mapping + nuclei templates sekaligus
+bash install.sh --update
+
+# Atau hanya update CVE mapping
 python3 crushgear.py --update-cves
 
 # Output:
-#   Static CVEs:    117
+#   Static CVEs:    188
 #   Discovered CVEs: 43  (+43 new)
-#   Total coverage: 160 CVEs → MSF modules
+#   Total coverage: 231 CVEs → MSF modules
 ```
 
 ---
@@ -401,7 +454,7 @@ Edit `config.json`:
 
 ## Struktur Folder
 
-### Mode Default (hanya tools-crushgear)
+### Mode Default / Update (hanya tools-crushgear)
 
 ```
 tools-crushgear/
@@ -440,7 +493,7 @@ tools-crushgear/
     └── {target}_{timestamp}/
 ```
 
-### Mode --full (source clone di parent folder)
+### Mode --full / --update (source clone di parent folder)
 
 Setelah `bash install.sh --full`, struktur parent akan jadi:
 
