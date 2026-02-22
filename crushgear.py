@@ -98,6 +98,152 @@ def detect_lhost() -> str:
         return "0.0.0.0"
 
 
+def get_all_local_ips() -> list[tuple[str, str]]:
+    """Return list of (interface, ip) for all non-loopback IPv4 interfaces."""
+    results: list[tuple[str, str]] = []
+    try:
+        import subprocess
+        out = subprocess.check_output(
+            ["ip", "-4", "-o", "addr", "show"],
+            stderr=subprocess.DEVNULL, text=True
+        )
+        for line in out.splitlines():
+            parts = line.split()
+            if len(parts) >= 4:
+                iface = parts[1]
+                ip    = parts[3].split("/")[0]
+                if not ip.startswith("127."):
+                    results.append((iface, ip))
+    except Exception:
+        # Fallback: macOS / BSD
+        try:
+            import subprocess
+            out = subprocess.check_output(
+                ["ifconfig"], stderr=subprocess.DEVNULL, text=True
+            )
+            current_iface = ""
+            for line in out.splitlines():
+                if line and not line[0].isspace():
+                    current_iface = line.split(":")[0]
+                elif "inet " in line and "127.0.0.1" not in line:
+                    ip = line.strip().split()[1]
+                    results.append((current_iface, ip))
+        except Exception:
+            pass
+    return results
+
+
+def fetch_public_ip() -> str:
+    """Try to get public IP via HTTP (best-effort, may fail on isolated nets)."""
+    import urllib.request
+    for url in ("https://api.ipify.org", "https://ifconfig.me/ip"):
+        try:
+            with urllib.request.urlopen(url, timeout=4) as r:
+                return r.read().decode().strip()
+        except Exception:
+            pass
+    return ""
+
+
+def ask_lhost() -> str:
+    """
+    Tanyakan ke user apakah jaringan 1 segment atau tidak,
+    lalu pilih LHOST yang sesuai.
+
+    Pilihan:
+      1 → Sama segment  → gunakan IP lokal (auto-detect)
+      2 → Beda segment  → masukkan IP Publik atau IP VPN/Tunnel
+    """
+    auto_ip   = detect_lhost()
+    local_ips = get_all_local_ips()
+
+    console.print()
+    console.print(Panel(
+        "[bold yellow]Pertanyaan: Apakah jaringan target 1 segment dengan mesin ini?[/bold yellow]\n\n"
+        "  [cyan][1][/cyan] Ya, [bold]sama segment[/bold]  "
+        f"→ gunakan IP lokal  [bright_white]{auto_ip}[/bright_white]\n"
+        "  [cyan][2][/cyan] Tidak, [bold]beda segment[/bold]  "
+        "→ masukkan IP Publik / VPN / Tunnel",
+        title="[bold]LHOST Selection[/bold]",
+        border_style="yellow",
+    ))
+
+    # Tampilkan semua IP lokal yang terdeteksi
+    if local_ips:
+        tbl = Table(show_header=True, header_style="bold dim", border_style="dim")
+        tbl.add_column("Interface", style="cyan")
+        tbl.add_column("IP Address", style="bright_white")
+        for iface, ip in local_ips:
+            tbl.add_row(iface, ip)
+        console.print(tbl)
+
+    while True:
+        try:
+            choice = input("\n  Pilihan [1/2]: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            console.print("\n[yellow]Dibatalkan, pakai IP auto-detect.[/yellow]")
+            return auto_ip
+
+        if choice == "1":
+            # Kalau ada lebih dari 1 IP lokal, tanyakan lagi
+            if len(local_ips) > 1:
+                console.print("\n  [dim]IP lokal yang tersedia:[/dim]")
+                for idx, (iface, ip) in enumerate(local_ips, 1):
+                    console.print(f"    [cyan][{idx}][/cyan] {iface}  {ip}")
+                console.print(f"    [cyan][0][/cyan] Auto ({auto_ip})")
+                while True:
+                    try:
+                        sub = input("  Pilih nomor interface: ").strip()
+                    except (EOFError, KeyboardInterrupt):
+                        return auto_ip
+                    if sub == "0":
+                        return auto_ip
+                    if sub.isdigit() and 1 <= int(sub) <= len(local_ips):
+                        chosen = local_ips[int(sub) - 1][1]
+                        console.print(f"  [green]✔[/green] LHOST = [bright_white]{chosen}[/bright_white]")
+                        return chosen
+                    console.print("  [red]Pilihan tidak valid.[/red]")
+            else:
+                console.print(f"  [green]✔[/green] LHOST = [bright_white]{auto_ip}[/bright_white]")
+                return auto_ip
+
+        elif choice == "2":
+            # Coba fetch public IP sebagai hint
+            console.print("  [dim]Mengambil IP publik...[/dim]", end="")
+            pub = fetch_public_ip()
+            if pub:
+                console.print(f" [dim]{pub}[/dim]")
+            else:
+                console.print(" [dim](gagal, jaringan terisolasi)[/dim]")
+
+            console.print(
+                "\n  Masukkan IP yang bisa di-reach oleh target:\n"
+                "  [dim](IP Publik, IP VPN/tun0, IP reverse proxy, dll)[/dim]"
+            )
+            if pub:
+                console.print(f"  [dim]Contoh IP publik terdeteksi: {pub}[/dim]")
+
+            while True:
+                try:
+                    raw = input("  LHOST → ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    console.print("\n[yellow]Dibatalkan, pakai IP auto-detect.[/yellow]")
+                    return auto_ip
+
+                # Validasi format IP
+                parts = raw.split(".")
+                if len(parts) == 4 and all(p.isdigit() and 0 <= int(p) <= 255 for p in parts):
+                    console.print(f"  [green]✔[/green] LHOST = [bright_white]{raw}[/bright_white]")
+                    return raw
+                # Cek apakah hostname/domain (untuk kasus ngrok, tunneling)
+                if raw and all(c.isalnum() or c in "-._" for c in raw):
+                    console.print(f"  [green]✔[/green] LHOST = [bright_white]{raw}[/bright_white]")
+                    return raw
+                console.print("  [red]Format IP tidak valid, coba lagi.[/red]")
+        else:
+            console.print("  [red]Pilihan tidak valid. Masukkan 1 atau 2.[/red]")
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Help system
 # ─────────────────────────────────────────────────────────────────────────────
@@ -321,10 +467,15 @@ async def _run(args: argparse.Namespace):
     print_startup_notification(outdated, total_cves, last_cve, script_upd)
 
     cfg_timeouts = cfg.get("timeouts", {})
-    lhost = args.lhost or cfg.get("lhost") or detect_lhost()
     lport = args.lport or cfg.get("lport", 4444)
-    if lhost == "0.0.0.0":
-        lhost = detect_lhost()
+
+    # Jika --lhost tidak di-set eksplisit → tanya user (segment check)
+    if args.lhost:
+        lhost = args.lhost
+    elif cfg.get("lhost") and cfg["lhost"] != "0.0.0.0":
+        lhost = cfg["lhost"]
+    else:
+        lhost = ask_lhost()
 
     target = parse_target(args.target)
     console.print(
