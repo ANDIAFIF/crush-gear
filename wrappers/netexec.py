@@ -38,36 +38,49 @@ class NetExecTool(BaseTool):
             cred = "-u '' -p ''"
 
         # ─────────────────────────────────────────────────────────────
-        # Phase A: Full SMB Enumeration
+        # Phase A: Full SMB Enumeration (split into separate commands)
+        # nxc rejects mixing --shares/--users/--groups with --sessions/
+        # --loggedon-users/--disks in a single call on some versions.
+        # Each category runs independently to avoid argument conflicts.
         # ─────────────────────────────────────────────────────────────
-        # --shares         : list all SMB shares + READ/WRITE permissions
-        # --users          : enumerate domain/local users via RPC
-        # --groups         : enumerate local/domain groups
-        # --pass-pol       : dump password policy (lockout threshold, complexity, age)
-        # --rid-brute 5000 : RID cycling (finds hidden users when --users is blocked)
-        # --sessions       : list active SMB sessions (who is connected right now)
-        # --loggedon-users : list users currently logged on interactively
-        # --disks          : list local drives/mounted volumes
-        smb_enum = (
+        # --shares   : list SMB shares + READ/WRITE perms
+        # --users    : enumerate domain/local users via RPC
+        # --groups   : enumerate local/domain groups
+        # --pass-pol : dump password policy (lockout, complexity, age)
+        smb_enum_core = (
             f"{nxc} smb {target_str} {cred} "
-            f"--shares --users --groups --pass-pol "
-            f"--rid-brute 5000 --sessions --loggedon-users --disks 2>&1"
+            f"--shares --users --groups --pass-pol 2>&1"
+        )
+        # --rid-brute: RID cycling — finds hidden users when --users is blocked
+        smb_enum_rid = (
+            f"{nxc} smb {target_str} {cred} --rid-brute 5000 2>&1"
+        )
+        # --sessions     : list active SMB sessions (who is connected right now)
+        # --loggedon-users: list users currently logged on interactively
+        # --disks        : list local drives/mounted volumes
+        # These must be separate calls (nxc rejects them combined with --shares etc.)
+        smb_enum_sessions = (
+            f"{nxc} smb {target_str} {cred} --sessions 2>&1"
+        )
+        smb_enum_loggedon = (
+            f"{nxc} smb {target_str} {cred} --loggedon-users 2>&1"
+        )
+        smb_enum_disks = (
+            f"{nxc} smb {target_str} {cred} --disks 2>&1"
         )
 
         # ─────────────────────────────────────────────────────────────
         # Phase B: LDAP Enumeration (Active Directory specific)
         # ─────────────────────────────────────────────────────────────
-        # --user-desc           : user Description field (VERY often contains passwords)
-        # --active-users        : only show active (non-disabled) accounts
+        # --user-desc was removed as a direct LDAP flag in newer nxc versions
+        # and moved to a module (-M user-desc). It is handled in Phase C below.
         # --trusted-for-delegation : Kerberos delegation — potential impersonation
         # --password-not-required  : accounts with PASSWD_NOTREQD flag (privesc)
         # --admin-count         : AdminSDHolder protected accounts (high-value targets)
         # --get-sid             : get domain SID (needed for some AD attacks)
         # --gmsa                : Group Managed Service Account secrets (auth bypass)
-        # --bloodhound          : dump BloodHound-compatible data (AD attack paths)
         ldap_enum = (
             f"{nxc} ldap {target_str} {cred} "
-            f"--user-desc --active-users "
             f"--trusted-for-delegation --password-not-required "
             f"--admin-count --get-sid --gmsa 2>&1"
         )
@@ -79,7 +92,10 @@ class NetExecTool(BaseTool):
             # --- GPP / Registry credential hunting ---
             "gpp_password",    # GPP passwords in SYSVOL/Policies — VERY common AD finding
             "gpp_autologin",   # Autologin credentials stored in Group Policy registry
-            "reg_winlogon",    # Winlogon registry key — stores default logon credentials
+            "reg-winlogon",    # Winlogon registry key — stores default logon credentials
+                               # NOTE: module name uses hyphen (-), NOT underscore (_)
+            # --- User description (moved from LDAP --user-desc to SMB module) ---
+            "user-desc",       # User Description field — very often contains passwords
             # --- Share & DNS enumeration ---
             "spider_plus",     # Spider ALL readable shares for secrets, configs, DB files
             "enum_dns",        # DNS zone transfer/enumeration via SMB (finds all A records)
@@ -147,7 +163,11 @@ class NetExecTool(BaseTool):
         # ─────────────────────────────────────────────────────────────
         parts = [
             "echo ''; echo '=== NetExec: Phase A — SMB Enumeration ==='",
-            smb_enum,
+            smb_enum_core,
+            smb_enum_rid,
+            smb_enum_sessions,
+            smb_enum_loggedon,
+            smb_enum_disks,
             "echo ''; echo '=== NetExec: Phase B — LDAP / Active Directory ==='",
             ldap_enum,
             "echo ''; echo '=== NetExec: Phase C — Credential Hunting (GPP/Registry/Spider) ==='",

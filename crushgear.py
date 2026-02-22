@@ -374,7 +374,7 @@ def print_help():
     # ── CVE Info ───────────────────────────────────────────────────────
     console.print()
     cfg = load_config()
-    static_count = 187
+    static_count = 188
     extra_count  = len(cfg.get("discovered_cves", {}))
     last_update  = cfg.get("_cve_last_update", "Belum pernah diupdate")[:10]
     console.print(Panel(
@@ -463,7 +463,7 @@ async def _run(args: argparse.Namespace):
     )
     extra_cves = cfg.get("discovered_cves", {})
     last_cve   = cfg.get("_cve_last_update", "")
-    total_cves = 187 + len(extra_cves)
+    total_cves = 188 + len(extra_cves)
     print_startup_notification(outdated, total_cves, last_cve, script_upd)
 
     cfg_timeouts = cfg.get("timeouts", {})

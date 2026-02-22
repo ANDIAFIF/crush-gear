@@ -252,17 +252,22 @@ class NucleiTool(BaseTool):
             # ── Performance ──────────────────────────────────────────
             "-c",              "25", # concurrent template execution
             "-bulk-size",      "25", # targets per batch
-            "-rate-limit",    "100", # req/sec (conservative for external targets)
+            "-rate-limit",     "50", # req/sec — reduced from 100; external targets
+                                     # throttle aggressively above this threshold
             "-ss",    "host-spray",  # all templates per host (memory efficient)
 
             # ── Reliability ───────────────────────────────────────────
-            "-retries",         "2",
+            "-retries",         "1", # reduced from 2; retrying throttled targets
+                                     # amplifies error count without gain
             "-timeout",        "10", # seconds per request
             "-max-host-error", "30", # skip host after 30 consecutive errors
 
             # ── Misc ─────────────────────────────────────────────────
             "-fr",                   # follow HTTP redirects
             "-duc",                  # disable update-check during scan
+            "-ni",                   # disable interactsh (no out-of-band callbacks)
+                                     # eliminates OAST-related errors on targets that
+                                     # block outbound connections to interactsh servers
         ]
 
         return cmd

@@ -49,4 +49,10 @@ class MetasploitTool(BaseTool):
         rc_file.write_text(rc_content)
         self._rc_path = str(rc_file)
 
-        return [self.binary, "-q", "-r", str(rc_file)]
+        # Kill any process holding LPORT before starting msfconsole.
+        # Prevents "Handler failed to bind" when a previous session left the port open.
+        return [
+            "bash", "-c",
+            f"fuser -k {self.lport}/tcp 2>/dev/null; sleep 1; "
+            f"{self.binary} -q -r '{str(rc_file)}'"
+        ]
