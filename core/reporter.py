@@ -1,3 +1,4 @@
+import re as _re
 import time
 from pathlib import Path
 from rich.console import Console
@@ -73,6 +74,64 @@ def print_summary(results: list[dict]):
 
     console.print()
     console.print(table)
+
+
+CRED_PATTERNS = [
+    _re.compile(r'\[\+\]', _re.IGNORECASE),
+    _re.compile(r'credential was successful', _re.IGNORECASE),
+    _re.compile(r'Login Successful', _re.IGNORECASE),
+    _re.compile(r'PWNED!', _re.IGNORECASE),
+    _re.compile(r'Success:\s+\S+', _re.IGNORECASE),
+]
+
+
+def parse_credentials(output_dir: Path) -> list[dict]:
+    """Parse successful credentials/logins from all tool output files."""
+    found = []
+    scan_files = {
+        "metasploit": output_dir / "metasploit.txt",
+        "netexec":    output_dir / "netexec.txt",
+        "smbmap":     output_dir / "smbmap.txt",
+        "nmap":       output_dir / "nmap.txt",
+    }
+    for tool, path in scan_files.items():
+        if not path.exists():
+            continue
+        for line in path.read_text(errors="replace").splitlines():
+            for pat in CRED_PATTERNS:
+                if pat.search(line):
+                    found.append({"tool": tool, "line": line.strip()})
+                    break
+    return found
+
+
+def print_credential_summary(output_dir: Path):
+    """Print a highlighted panel of all found credentials/successes."""
+    creds = parse_credentials(output_dir)
+    if not creds:
+        return
+
+    console.print()
+    tbl = Table(
+        title="[bold bright_green]Credentials & Successes Found[/bold bright_green]",
+        border_style="bright_green",
+        show_lines=True,
+    )
+    tbl.add_column("Tool",    style="bold", min_width=12)
+    tbl.add_column("Finding", style="bright_white")
+
+    seen: set[str] = set()
+    for c in creds:
+        key = f"{c['tool']}|{c['line']}"
+        if key not in seen:
+            seen.add(key)
+            color = TOOL_COLORS.get(c["tool"], "white")
+            tbl.add_row(f"[{color}]{c['tool']}[/]", c["line"])
+
+    console.print(tbl)
+    console.print(
+        f"[bold bright_green]  → {len(seen)} finding(s) total[/bold bright_green]\n"
+    )
 
 
 def write_result_file(output_dir: Path, tool_name: str, lines: list[str]):

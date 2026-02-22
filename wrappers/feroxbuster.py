@@ -125,13 +125,12 @@ class FeroxbusterTool(BaseTool):
         httpx_urls = self.feed.get("urls", [])
 
         if httpx_urls:
-            # Use --input-file so stdin remains a TTY (pipe breaks Scan Mgmt Menu)
             url_file = Path(tempfile.mktemp(prefix="crushgear_ferox_", suffix=".txt"))
             url_file.write_text("\n".join(httpx_urls[:30]) + "\n")   # cap at 30 targets
+            flags_str = " ".join(str(f) for f in common_flags)
             return [
-                self.binary,
-                "--input-file", str(url_file),
-                *common_flags,
+                "bash", "-c",
+                f"cat {url_file} | {self.binary} --stdin {flags_str}",
             ]
 
         # Fallback: single URL from original target

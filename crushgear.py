@@ -17,7 +17,7 @@ from rich.table import Table
 from rich.text import Text
 from rich.columns import Columns
 
-from core.reporter import print_banner, print_summary, console
+from core.reporter import print_banner, print_summary, print_credential_summary, console
 from core.runner import run_phased
 from core.target import parse_target
 from core.updater import (
@@ -559,6 +559,7 @@ async def _run(args: argparse.Namespace):
     )
 
     print_summary(results)
+    print_credential_summary(output_dir)
     console.print(f"\n[dim]All output saved to: {output_dir}[/dim]")
 
 

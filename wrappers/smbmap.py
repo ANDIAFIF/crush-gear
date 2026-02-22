@@ -70,14 +70,16 @@ class SmbmapTool(BaseTool):
             # Explicit null/anonymous session
             cred_flags = "-u '' -p ''"
 
+        # ── Skip if no SMB hosts confirmed ───────────────────────────
+        if not smb_hosts and not amass_hosts:
+            return []
+
         # ── smbmap flags ─────────────────────────────────────────────
-        # -R              : recursive listing (enumerate directories and files)
+        # -r              : recursive listing (enumerate directories and files)
         # --depth 8       : how deep to recurse (8 = thorough, realistic for pentest)
-        # -g              : grep/print interesting file content inline
         # -A <pattern>    : auto-download files matching regex pattern
-        # --no-write-check: skip write access checks (less IDS noise, faster)
         # -q              : quiet mode (suppress banner)
-        base_flags = f"-R --depth 8 -A '{INTERESTING_PATTERNS}' -q"
+        base_flags = f"-r --depth 8 -A '{INTERESTING_PATTERNS}' -q"
 
         # ── Write host list to temp file ─────────────────────────────
         hosts_file = Path(tempfile.mktemp(prefix="crushgear_smb_", suffix=".txt"))

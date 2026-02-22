@@ -50,7 +50,9 @@ class HttpxTool(BaseTool):
             target_args = ["-l", str(url_file)]
 
         elif t.type == TargetType.URL:
-            target_args = ["-u", t.url]
+            url_file = Path(tempfile.mktemp(prefix="crushgear_httpx_", suffix=".txt"))
+            url_file.write_text(t.url + "\n")
+            target_args = ["-l", str(url_file)]
 
         else:
             # IP or DOMAIN — probe http, https, and common alt-ports

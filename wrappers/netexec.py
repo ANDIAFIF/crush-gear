@@ -150,6 +150,11 @@ class NetExecTool(BaseTool):
         rdp_hosts    = self.feed.get("rdp_hosts", [])
         ssh_hosts    = self.feed.get("ssh_hosts", [])
         dc_hosts     = self.feed.get("dc_hosts", [])
+        has_smb      = bool(smb_hosts)
+
+        # If no SMB hosts AND no other protocol hosts → nothing to do
+        if not has_smb and not any([winrm_hosts, mssql_hosts, ssh_hosts, rdp_hosts, dc_hosts]):
+            return []
 
         def _hostfile(hosts: list, prefix: str) -> str:
             """Write a list of hosts to a temp file and return its path."""
@@ -161,33 +166,36 @@ class NetExecTool(BaseTool):
         # ─────────────────────────────────────────────────────────────
         # Build the complete bash script
         # ─────────────────────────────────────────────────────────────
-        parts = [
-            "echo ''; echo '=== NetExec: Phase A — SMB Enumeration ==='",
-            smb_enum_core,
-            smb_enum_rid,
-            smb_enum_sessions,
-            smb_enum_loggedon,
-            smb_enum_disks,
-            "echo ''; echo '=== NetExec: Phase B — LDAP / Active Directory ==='",
-            ldap_enum,
-            "echo ''; echo '=== NetExec: Phase C — Credential Hunting (GPP/Registry/Spider) ==='",
-        ]
+        parts = []
 
-        for mod in cred_modules:
-            parts.append(f"{nxc} smb {target_str} {cred} -M {mod} 2>&1")
-
-        parts += [
-            "echo ''; echo '=== NetExec: Phase D — Vulnerability Checks ==='",
-        ]
-        for mod in vuln_modules:
-            parts.append(f"{nxc} smb {target_str} {cred} -M {mod} 2>&1")
-
-        if has_creds:
+        # Phase A–E only run when SMB hosts are confirmed (port 445 open)
+        if has_smb:
             parts += [
-                "echo ''; echo '=== NetExec: Phase E — Post-Auth Credential Dumping ==='",
+                "echo ''; echo '=== NetExec: Phase A — SMB Enumeration ==='",
+                smb_enum_core,
+                smb_enum_rid,
+                smb_enum_sessions,
+                smb_enum_loggedon,
+                smb_enum_disks,
+                "echo ''; echo '=== NetExec: Phase B — LDAP / Active Directory ==='",
+                ldap_enum,
+                "echo ''; echo '=== NetExec: Phase C — Credential Hunting (GPP/Registry/Spider) ==='",
             ]
-            for mod in postauth_modules:
+            for mod in cred_modules:
                 parts.append(f"{nxc} smb {target_str} {cred} -M {mod} 2>&1")
+
+            parts += [
+                "echo ''; echo '=== NetExec: Phase D — Vulnerability Checks ==='",
+            ]
+            for mod in vuln_modules:
+                parts.append(f"{nxc} smb {target_str} {cred} -M {mod} 2>&1")
+
+            if has_creds:
+                parts += [
+                    "echo ''; echo '=== NetExec: Phase E — Post-Auth Credential Dumping ==='",
+                ]
+                for mod in postauth_modules:
+                    parts.append(f"{nxc} smb {target_str} {cred} -M {mod} 2>&1")
 
         # ── Phase F: WinRM (port 5985/5986) — PowerShell Remoting ────
         # WinRM enables remote cmd/PowerShell execution; if creds work

