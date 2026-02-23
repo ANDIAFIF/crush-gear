@@ -1,7 +1,7 @@
 import asyncio
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Protocol
 
 from core.reporter import print_tool_line, write_result_file, console
 from core.feed import collect_all_feed, parse_nmap, get_all_hosts
@@ -40,6 +40,34 @@ class ToolResult:
         self.returncode: Optional[int] = None
 
 
+class ExecutionCallbacks(Protocol):
+    """Protocol for execution event callbacks."""
+
+    async def on_tool_start(
+        self, tool: str, phase: int, command: list[str]
+    ) -> None:
+        """Called when a tool starts execution."""
+        ...
+
+    async def on_tool_output(
+        self, tool: str, line: str, line_num: int
+    ) -> None:
+        """Called for each output line from a tool."""
+        ...
+
+    async def on_tool_complete(
+        self, tool: str, result: ToolResult
+    ) -> None:
+        """Called when a tool completes (success or error)."""
+        ...
+
+    async def on_phase_complete(
+        self, phase: int, feed: dict
+    ) -> None:
+        """Called after a phase completes and feed is collected."""
+        ...
+
+
 def resolve_timeout(tool_name: str, cfg_timeouts: dict) -> int:
     return cfg_timeouts.get(tool_name) or TOOL_TIMEOUTS.get(tool_name) or cfg_timeouts.get("default", 300)
 
@@ -49,6 +77,8 @@ async def run_tool(
     output_dir: Path,
     timeout: int,
     results_map: dict[str, ToolResult],
+    callbacks: ExecutionCallbacks | None = None,
+    phase: int = 0,
 ):
     tool_name = wrapper.name
     result = results_map[tool_name]
@@ -71,6 +101,10 @@ async def run_tool(
         + (" [dim]...[/dim]" if len(cmd) > 6 else "")
     )
 
+    # CALLBACK: Tool start
+    if callbacks:
+        await callbacks.on_tool_start(tool_name, phase, cmd)
+
     try:
         proc = await asyncio.create_subprocess_exec(
             *[str(c) for c in cmd],
@@ -80,10 +114,16 @@ async def run_tool(
 
         async def read_stream():
             assert proc.stdout
+            line_num = 0
             async for raw_line in proc.stdout:
                 line = raw_line.decode(errors="replace").rstrip()
                 result.lines.append(line)
                 print_tool_line(tool_name, line)
+
+                # CALLBACK: Tool output
+                if callbacks:
+                    await callbacks.on_tool_output(tool_name, line, line_num)
+                line_num += 1
 
         try:
             await asyncio.wait_for(read_stream(), timeout=timeout)
@@ -110,6 +150,11 @@ async def run_tool(
 
     result.duration = time.monotonic() - start
     result.output_file = write_result_file(output_dir, tool_name, result.lines)
+
+    # CALLBACK: Tool complete
+    if callbacks:
+        await callbacks.on_tool_complete(tool_name, result)
+
     return result
 
 
@@ -179,13 +224,14 @@ async def run_phase(
     output_dir: Path,
     cfg_timeouts: dict,
     results_map: dict[str, ToolResult],
+    callbacks: ExecutionCallbacks | None = None,
 ):
     if not wrappers:
         console.print(f"[dim]Phase {phase_num} ({phase_name}): no tools to run, skipping.[/dim]")
         return
     console.rule(f"[bold]Phase {phase_num} — {phase_name}[/bold]")
     tasks = [
-        run_tool(w, output_dir, resolve_timeout(w.name, cfg_timeouts), results_map)
+        run_tool(w, output_dir, resolve_timeout(w.name, cfg_timeouts), results_map, callbacks, phase_num)
         for w in wrappers
     ]
     await asyncio.gather(*tasks)
@@ -198,6 +244,7 @@ async def run_phased(
     phase3_factory,           # callable(feed) → [metasploit]
     output_dir: Path,
     cfg_timeouts: dict | None = None,
+    callbacks: ExecutionCallbacks | None = None,
 ) -> list[dict]:
     cfg_timeouts = cfg_timeouts or {}
     results_map: dict[str, ToolResult] = {}
@@ -211,20 +258,24 @@ async def run_phased(
     register(phase1_wrappers)
 
     # ── Phase 0: Port Scan ───────────────────────────────────────────
-    await run_phase(0, "Port Scanning (nmap)", phase0_wrappers, output_dir, cfg_timeouts, results_map)
+    await run_phase(0, "Port Scanning (nmap)", phase0_wrappers, output_dir, cfg_timeouts, results_map, callbacks)
 
     # Collect nmap feed
     feed = collect_all_feed(output_dir)
+    if callbacks:
+        await callbacks.on_phase_complete(0, feed)
     if feed.get("hosts") or feed.get("smb_hosts") or feed.get("urls"):
         console.print()
         _log_feed_summary(feed)
         console.print()
 
     # ── Phase 1: Reconnaissance ──────────────────────────────────────
-    await run_phase(1, "Reconnaissance (amass + httpx)", phase1_wrappers, output_dir, cfg_timeouts, results_map)
+    await run_phase(1, "Reconnaissance (amass + httpx)", phase1_wrappers, output_dir, cfg_timeouts, results_map, callbacks)
 
     # Update feed with httpx results
     feed = collect_all_feed(output_dir)
+    if callbacks:
+        await callbacks.on_phase_complete(1, feed)
     console.print()
     _log_feed_summary(feed)
     console.print()
@@ -232,10 +283,12 @@ async def run_phased(
     # ── Phase 2: Scanning ────────────────────────────────────────────
     phase2 = phase2_factory(feed)
     register(phase2)
-    await run_phase(2, "Scanning & Enumeration", phase2, output_dir, cfg_timeouts, results_map)
+    await run_phase(2, "Scanning & Enumeration", phase2, output_dir, cfg_timeouts, results_map, callbacks)
 
     # Update feed with nuclei results
     feed = collect_all_feed(output_dir)
+    if callbacks:
+        await callbacks.on_phase_complete(2, feed)
     console.print()
     _log_feed_summary(feed)
     console.print()
@@ -243,7 +296,12 @@ async def run_phased(
     # ── Phase 3: Exploitation ────────────────────────────────────────
     phase3 = phase3_factory(feed)
     register(phase3)
-    await run_phase(3, "Exploitation (metasploit)", phase3, output_dir, cfg_timeouts, results_map)
+    await run_phase(3, "Exploitation (metasploit)", phase3, output_dir, cfg_timeouts, results_map, callbacks)
+
+    # Collect final feed and notify completion
+    if callbacks:
+        final_feed = collect_all_feed(output_dir)
+        await callbacks.on_phase_complete(3, final_feed)
 
     return [
         {
