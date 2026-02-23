@@ -102,7 +102,7 @@ class HttpxTool(BaseTool):
             "-silent",           # suppress banner/info messages
 
             # ── Performance ─────────────────────────────────────────
-            "-c",      "50",     # concurrency (threads)
+            "-threads", "50",    # concurrency (threads)
             "-timeout", "10",    # per-request timeout in seconds
             "-retries", "2",     # retry failed requests
         ]

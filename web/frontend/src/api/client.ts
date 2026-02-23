@@ -73,7 +73,9 @@ export const scanApi = {
       limit?: number;
     }
   ): Promise<import('../types').ToolOutputsResponse> => {
+    console.log('📡 API call getToolOutputs:', { scanId, params });
     const response = await api.get(`/api/scans/${scanId}/tool-outputs`, { params });
+    console.log('📦 API response getToolOutputs:', response.data.outputs?.length, 'lines');
     return response.data;
   },
 };

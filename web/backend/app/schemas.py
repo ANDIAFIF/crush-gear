@@ -1,8 +1,9 @@
 """Pydantic schemas for request/response validation."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional, List, Dict, Any
+import json
 
 
 # ===== Scan Schemas =====
@@ -42,6 +43,19 @@ class ScanDetail(ScanBase):
     feed_data: Optional[Dict[str, Any]]
     error_message: Optional[str]
     tool_executions: List["ToolExecutionResponse"] = []
+
+    @field_validator('feed_data', mode='before')
+    @classmethod
+    def parse_json_field(cls, v):
+        """Parse JSON string fields to dict."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return {}
+        return v
 
     class Config:
         from_attributes = True
@@ -93,6 +107,19 @@ class HostResponse(BaseModel):
     products_json: Optional[Dict[str, str]]
     ports: List[PortResponse] = []
 
+    @field_validator('services_json', 'products_json', mode='before')
+    @classmethod
+    def parse_json_field(cls, v):
+        """Parse JSON string fields to dict."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return {}
+        return v
+
     class Config:
         from_attributes = True
 
@@ -107,6 +134,19 @@ class URLResponse(BaseModel):
     title: Optional[str]
     is_live: bool
     metadata_json: Optional[Dict[str, Any]]
+
+    @field_validator('metadata_json', mode='before')
+    @classmethod
+    def parse_json_field(cls, v):
+        """Parse JSON string fields to dict."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return {}
+        return v
 
     class Config:
         from_attributes = True
@@ -124,6 +164,19 @@ class VulnerabilityResponse(BaseModel):
     msf_module: Optional[str]
     msf_payload: Optional[str]
     metadata_json: Optional[Dict[str, Any]]
+
+    @field_validator('metadata_json', mode='before')
+    @classmethod
+    def parse_json_field(cls, v):
+        """Parse JSON string fields to dict."""
+        if v is None:
+            return None
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return {}
+        return v
 
     class Config:
         from_attributes = True

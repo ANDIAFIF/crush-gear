@@ -29,6 +29,11 @@ export function ScanDetailPage() {
   const toolOutputFilter = selectedTool !== 'all' ? selectedTool : undefined;
   const { data: historicalOutputs } = useToolOutputs(scanId, toolOutputFilter, { limit: 5000 }, scan?.status);
 
+  // Debug: Log when filter changes
+  useEffect(() => {
+    console.log('🔍 Filter changed:', { selectedTool, toolOutputFilter });
+  }, [selectedTool, toolOutputFilter]);
+
   // WebSocket for real-time updates (TEMPORARILY DISABLED due to connection issues)
   // Using REST API polling with refetchInterval instead
   const { isConnected } = useWebSocket(
@@ -56,17 +61,11 @@ export function ScanDetailPage() {
   // Load historical outputs when scan is completed or when filter changes
   useEffect(() => {
     if (historicalOutputs?.outputs) {
-      // If scan is not running, use historical outputs
-      if (scan?.status === 'COMPLETED' || scan?.status === 'ERROR') {
-        setTerminalLines(historicalOutputs.outputs);
-      }
-      // If scan is running and we just switched filters, load what exists so far
-      else if (scan?.status === 'RUNNING' && terminalLines.length === 0) {
-        setTerminalLines(historicalOutputs.outputs);
-      }
+      // Always update terminal lines when historical outputs change
+      // This handles: completed scans, running scans, and filter changes
+      setTerminalLines(historicalOutputs.outputs);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historicalOutputs, scan?.status, selectedTool]);
+  }, [historicalOutputs]);
 
   // Compute phase statuses
   type PhaseStatus = 'pending' | 'running' | 'completed' | 'error';
@@ -136,6 +135,71 @@ export function ScanDetailPage() {
       {/* Phase Progress */}
       <PhaseProgress phases={phases} />
 
+      {/* Current Progress - Show for running scans */}
+      {scan.status === 'RUNNING' && scan.tool_executions && (
+        <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
+            <span className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></span>
+            Current Progress
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Current Phase */}
+            {(() => {
+              const currentPhase = phases.find(p => p.status === 'running');
+              return currentPhase && (
+                <div className="bg-white rounded-lg p-4 border border-blue-100">
+                  <p className="text-sm text-gray-600 mb-1">Current Phase</p>
+                  <p className="text-lg font-bold text-blue-900">
+                    Phase {currentPhase.number}: {currentPhase.name}
+                  </p>
+                </div>
+              );
+            })()}
+
+            {/* Current Tool */}
+            {(() => {
+              const runningTool = scan.tool_executions.find(t => t.status === 'RUNNING');
+              return runningTool && (
+                <div className="bg-white rounded-lg p-4 border border-blue-100">
+                  <p className="text-sm text-gray-600 mb-1">Running Tool</p>
+                  <p className="text-lg font-bold text-blue-900 uppercase">
+                    {runningTool.tool_name}
+                  </p>
+                  {runningTool.started_at && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Started: {new Date(runningTool.started_at).toLocaleTimeString()}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Progress Stats */}
+            <div className="bg-white rounded-lg p-4 border border-blue-100">
+              <p className="text-sm text-gray-600 mb-1">Progress</p>
+              <p className="text-lg font-bold text-blue-900">
+                {scan.tool_executions.filter(t => t.status === 'DONE').length} / {scan.tool_executions.length} tools
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {scan.tool_executions.filter(t => t.status === 'ERROR').length} errors, {scan.tool_executions.filter(t => t.status === 'SKIPPED').length} skipped
+              </p>
+            </div>
+          </div>
+
+          {/* Live Output Preview */}
+          {terminalLines.length > 0 && (
+            <div className="mt-4 bg-gray-900 text-green-400 rounded-lg p-4 font-mono text-sm max-h-48 overflow-y-auto">
+              <p className="text-gray-500 text-xs mb-2">Live Output (last 10 lines):</p>
+              {terminalLines.slice(-10).map((line, idx) => (
+                <div key={`preview-${idx}`} className="text-xs">
+                  <span className="text-gray-500">[{line.tool_name}]</span> {line.line_text}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <nav className="-mb-px flex space-x-8">
@@ -170,6 +234,11 @@ export function ScanDetailPage() {
                 status={tool.status}
                 duration={tool.duration}
                 returncode={tool.returncode}
+                onClick={() => {
+                  console.log('🎯 Tool card clicked:', tool.tool_name);
+                  setActiveTab('terminal');
+                  setSelectedTool(tool.tool_name);
+                }}
               />
             ))}
           </div>

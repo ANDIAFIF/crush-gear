@@ -13,17 +13,22 @@ app = FastAPI(
 )
 
 # CORS middleware for localhost development
+# Note: Cannot use "*" with allow_credentials=True (CORS spec requirement)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",  # Vite default dev server
-        "http://localhost:3000",  # Alternative React dev server
+        "http://localhost:5173",  # Vite dev server default
+        "http://localhost:5174",  # Alternative Vite port
+        "http://localhost:3000",  # Alternative port
         "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:8000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Include API routers
