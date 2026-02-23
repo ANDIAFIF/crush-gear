@@ -3,7 +3,6 @@
  */
 
 interface PhaseProgressProps {
-  currentPhase: number;
   phases: {
     number: number;
     name: string;
@@ -11,7 +10,7 @@ interface PhaseProgressProps {
   }[];
 }
 
-export function PhaseProgress({ currentPhase, phases }: PhaseProgressProps) {
+export function PhaseProgress({ phases }: PhaseProgressProps) {
   return (
     <div className="w-full py-6">
       <div className="flex items-center justify-between">

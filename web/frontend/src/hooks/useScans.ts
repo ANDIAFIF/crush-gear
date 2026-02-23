@@ -6,11 +6,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { scanApi, hostApi, vulnerabilityApi } from '../api/client';
 import type { ScanCreateRequest } from '../types';
 
+// Types for scan filters
+interface ScanFilters {
+  skip?: number;
+  limit?: number;
+  status?: string;
+  target?: string;
+}
+
 // Query keys
 export const scanKeys = {
   all: ['scans'] as const,
   lists: () => [...scanKeys.all, 'list'] as const,
-  list: (filters: Record<string, any>) => [...scanKeys.lists(), filters] as const,
+  list: (filters: ScanFilters) => [...scanKeys.lists(), filters] as const,
   details: () => [...scanKeys.all, 'detail'] as const,
   detail: (id: number) => [...scanKeys.details(), id] as const,
   hosts: (id: number) => [...scanKeys.detail(id), 'hosts'] as const,
@@ -20,12 +28,7 @@ export const scanKeys = {
 /**
  * Hook to list scans with optional filters
  */
-export function useScans(filters?: {
-  skip?: number;
-  limit?: number;
-  status?: string;
-  target?: string;
-}) {
+export function useScans(filters?: ScanFilters) {
   return useQuery({
     queryKey: scanKeys.list(filters || {}),
     queryFn: () => scanApi.list(filters),
@@ -39,8 +42,9 @@ export function useScan(scanId: number) {
   return useQuery({
     queryKey: scanKeys.detail(scanId),
     queryFn: () => scanApi.get(scanId),
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refetch every 2 seconds if scan is running
+      const data = query.state.data;
       if (data?.status === 'RUNNING' || data?.status === 'PENDING') {
         return 2000;
       }
@@ -52,22 +56,41 @@ export function useScan(scanId: number) {
 /**
  * Hook to get hosts for a scan
  */
-export function useHosts(scanId: number) {
+export function useHosts(scanId: number, scanStatus?: string) {
   return useQuery({
     queryKey: scanKeys.hosts(scanId),
     queryFn: () => hostApi.list(scanId),
     enabled: scanId > 0,
+    refetchInterval: (scanStatus === 'RUNNING' || scanStatus === 'PENDING') ? 3000 : false,
   });
 }
 
 /**
  * Hook to get vulnerabilities for a scan
  */
-export function useVulnerabilities(scanId: number) {
+export function useVulnerabilities(scanId: number, scanStatus?: string) {
   return useQuery({
     queryKey: scanKeys.vulnerabilities(scanId),
     queryFn: () => vulnerabilityApi.list(scanId),
     enabled: scanId > 0,
+    refetchInterval: (scanStatus === 'RUNNING' || scanStatus === 'PENDING') ? 3000 : false,
+  });
+}
+
+/**
+ * Hook to get tool outputs for a scan
+ */
+export function useToolOutputs(
+  scanId: number,
+  toolName?: string,
+  options?: { skip?: number; limit?: number },
+  scanStatus?: string
+) {
+  return useQuery({
+    queryKey: [...scanKeys.detail(scanId), 'tool-outputs', toolName, options],
+    queryFn: () => scanApi.getToolOutputs(scanId, { tool_name: toolName, ...options }),
+    enabled: scanId > 0,
+    refetchInterval: (scanStatus === 'RUNNING' || scanStatus === 'PENDING') ? 3000 : false,
   });
 }
 

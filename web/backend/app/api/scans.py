@@ -102,3 +102,55 @@ async def delete_scan(scan_id: int, db: Session = Depends(get_db)):
     if not success:
         raise HTTPException(status_code=404, detail=f"Scan {scan_id} not found")
     return {"success": True, "message": f"Scan {scan_id} deleted"}
+
+
+@router.get("/scans/{scan_id}/tool-outputs", response_model=schemas.ScanToolOutputsResponse)
+async def get_scan_tool_outputs(
+    scan_id: int,
+    tool_name: Optional[str] = Query(None, description="Filter by specific tool name"),
+    skip: int = Query(0, ge=0, description="Number of lines to skip"),
+    limit: int = Query(1000, ge=1, le=5000, description="Max number of lines to return"),
+    db: Session = Depends(get_db)
+):
+    """
+    Get tool output lines for a scan.
+    
+    Can filter by tool_name or retrieve all outputs.
+    Returns output lines with line numbers for terminal display.
+    """
+    # Verify scan exists
+    scan = crud.get_scan_by_id(db, scan_id)
+    if not scan:
+        raise HTTPException(status_code=404, detail=f"Scan {scan_id} not found")
+    
+    # Get all tool executions for this scan
+    tool_execs = scan.tool_executions
+    
+    # Filter by tool_name if specified
+    if tool_name:
+        tool_execs = [te for te in tool_execs if te.tool_name == tool_name]
+    
+    # Collect all outputs from matching tool executions
+    all_outputs = []
+    for tool_exec in tool_execs:
+        outputs, _ = crud.get_tool_outputs(db, tool_exec.id, skip=0, limit=10000)
+        for output in outputs:
+            all_outputs.append({
+                "line_num": output.line_num,
+                "line_text": f"[{tool_exec.tool_name}] {output.line_text}",
+                "tool_name": tool_exec.tool_name,
+                "timestamp": output.timestamp.isoformat() if output.timestamp else None
+            })
+    
+    # Sort by line_num
+    all_outputs.sort(key=lambda x: x["line_num"])
+    
+    # Apply pagination
+    paginated_outputs = all_outputs[skip:skip + limit]
+    
+    return {
+        "outputs": paginated_outputs,
+        "total": len(all_outputs),
+        "skip": skip,
+        "limit": limit
+    }

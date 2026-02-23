@@ -111,7 +111,7 @@ class DatabaseCallbacks:
         # Update scan feed_data
         scan = self.db.query(models.Scan).get(self.scan_id)
         if scan:
-            scan.feed_data = json.dumps(feed)
+            scan.feed_data = feed  # SQLAlchemy JSON column handles serialization automatically
             self.db.commit()
 
         # Broadcast WebSocket

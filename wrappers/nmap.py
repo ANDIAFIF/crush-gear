@@ -149,12 +149,12 @@ class NmapTool(BaseTool):
             # Fallback: top-10000 ports covers 99.99% of real targets
             port_spec = None  # will use --top-ports
 
-        # ── Phase 2: deep scan (service + OS + NSE) on open ports ───
+        # ── Phase 2: deep scan (service + NSE) on open ports ───
         cmd = [
             self.binary,
             "-sV",                     # service/version detection
             "-sC",                     # default NSE scripts (broad baseline)
-            "-O",                      # OS detection (requires root)
+            # Note: -O (OS detection) removed - requires root/sudo privileges
             "--open",                  # show only open ports
             "-T4",                     # aggressive timing
             "-Pn",                     # skip host ping (works on firewalled hosts)

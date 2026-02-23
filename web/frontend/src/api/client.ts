@@ -61,6 +61,21 @@ export const scanApi = {
     const response = await api.delete(`/api/scans/${scanId}`);
     return response.data;
   },
+
+  /**
+   * Get tool outputs for a scan
+   */
+  getToolOutputs: async (
+    scanId: number,
+    params?: {
+      tool_name?: string;
+      skip?: number;
+      limit?: number;
+    }
+  ): Promise<import('../types').ToolOutputsResponse> => {
+    const response = await api.get(`/api/scans/${scanId}/tool-outputs`, { params });
+    return response.data;
+  },
 };
 
 // Host endpoints

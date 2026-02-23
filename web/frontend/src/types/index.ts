@@ -100,6 +100,20 @@ export interface VulnerabilityListResponse {
   vulnerabilities: Vulnerability[];
 }
 
+export interface ToolOutputLine {
+  line_num: number;
+  line_text: string;
+  tool_name: string;
+  timestamp: string | null;
+}
+
+export interface ToolOutputsResponse {
+  outputs: ToolOutputLine[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
 // WebSocket message types
 export type WebSocketMessage =
   | { type: 'connected'; scan_id: number; message: string }

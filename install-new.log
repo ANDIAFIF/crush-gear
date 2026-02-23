@@ -1,0 +1,192 @@
+
+[1m[0;36m╔══════════════════════════════════════════════════════════╗[0m
+[1m[0;36m║        CrushGear — Automated Installer                   ║[0m
+[1m[0;36m╚══════════════════════════════════════════════════════════╝[0m
+
+
+[1m[1;33m▶ Checking Python (3.9+ required)[0m
+  [0;32m✓ Using: python3.12 Python 3.12.3[0m
+
+[1m[1;33m▶ Installing Python dependencies (rich, jinja2, aiofiles)[0m
+The virtual environment was not created successfully because ensurepip is not
+available.  On Debian/Ubuntu systems, you need to install the python3-venv
+package using the following command.
+
+    apt install python3.12-venv
+
+You may need to use sudo with that command.  After installing the python3-venv
+package, recreate your virtual environment.
+
+Failing command: /home/rahmat/mvp/crush-gear/.venv/bin/python3.12
+
+  [0;32m✓ Python deps installed[0m
+
+[1m[1;33m▶ Pre-installing build dependencies[0m
+  [0;32m✓ Rust found at ~/.cargo/bin[0m
+
+[1m[1;33m▶ Installing pentest tools (skip metasploit)[0m
+  [0;36m→ Installing: nmap, netexec, smbmap, amass, httpx, nuclei, feroxbuster[0m
+
+  [0;32m✓ Python compatible for netexec: python3.12 (Python 3.12.3)[0m
+  [0;32m✓ Rust/cargo in PATH[0m
+
+[1m[1;33m▶ Installing netexec in project-local virtualenv ...[0m
+  [0;36m→ This keeps nxc inside your project folder (portable for team sharing)[0m
+The virtual environment was not created successfully because ensurepip is not
+available.  On Debian/Ubuntu systems, you need to install the python3-venv
+package using the following command.
+
+    apt install python3.12-venv
+
+You may need to use sudo with that command.  After installing the python3-venv
+package, recreate your virtual environment.
+
+Failing command: /home/rahmat/mvp/crush-gear/.nxc_venv/bin/python3.12
+
+  [1;33m⚠ venv install failed, trying pipx ...[0m
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+
+[1m[1;33m▶ Trying pip install netexec ...[0m
+Defaulting to user installation because normal site-packages is not writeable
+ERROR: Could not find a version that satisfies the requirement netexec (from versions: none)
+ERROR: No matching distribution found for netexec
+  [0;31m✗ netexec install failed after all attempts[0m
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
+    
+    If you wish to install a non-Debian-packaged Python package,
+    create a virtual environment using python3 -m venv path/to/venv.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+    sure you have python3-full installed.
+    
+    If you wish to install a non-Debian packaged Python application,
+    it may be easiest to use pipx install xyz, which will manage a
+    virtual environment for you. Make sure you have pipx installed.
+    
+    See /usr/share/doc/python3.12/README.venv for more information.
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+  [nmap] Not found — installing via package manager ...
+  [nmap] $ sudo apt-get update -qq
+  [nmap] ✗ FAILED (exit 1)
+  [nmap] $ sudo apt-get install -y nmap
+  [nmap] ✗ FAILED (exit 1)
+  [smbmap] Installing via pip ...
+  [smbmap] $ /usr/bin/python3.12 -m pip install smbmap -q
+  [smbmap] ✗ FAILED (exit 1)
+  [amass] Fetching latest from github.com/owasp-amass/amass ...
+  [github] API error for owasp-amass/amass: <urlopen error [Errno 101] Network is unreachable>
+  [amass] ✗ No asset matches ['linux', 'amd64']. Available:
+    []
+  [httpx] Fetching latest from github.com/projectdiscovery/httpx ...
+  [github] API error for projectdiscovery/httpx: <urlopen error [Errno 101] Network is unreachable>
+  [httpx] ✗ No asset matches ['linux', 'amd64']. Available:
+    []
+  [nuclei] Fetching latest from github.com/projectdiscovery/nuclei ...
+  [github] API error for projectdiscovery/nuclei: <urlopen error [Errno 101] Network is unreachable>
+  [nuclei] ✗ No asset matches ['linux', 'amd64']. Available:
+    []
+  [feroxbuster] Fetching latest from github.com/epi052/feroxbuster ...
+  [feroxbuster] Downloading x86_64-linux-feroxbuster.tar.gz ...
+  [feroxbuster]   1% (64 KB)  [feroxbuster]   2% (128 KB)  [feroxbuster]   3% (192 KB)  [feroxbuster]   5% (256 KB)  [feroxbuster]   6% (320 KB)  [feroxbuster]   7% (384 KB)  [feroxbuster]   9% (448 KB)  [feroxbuster]  10% (512 KB)  [feroxbuster]  11% (576 KB)  [feroxbuster]  13% (640 KB)  [feroxbuster]  14% (704 KB)  [feroxbuster]  15% (768 KB)  [feroxbuster]  16% (832 KB)  [feroxbuster]  18% (896 KB)  [feroxbuster]  19% (960 KB)  [feroxbuster]  20% (1024 KB)  [feroxbuster]  22% (1088 KB)  [feroxbuster]  23% (1152 KB)  [feroxbuster]  24% (1216 KB)  [feroxbuster]  26% (1280 KB)  [feroxbuster]  27% (1344 KB)  [feroxbuster]  28% (1408 KB)  [feroxbuster]  30% (1472 KB)  [feroxbuster]  31% (1536 KB)  [feroxbuster]  32% (1600 KB)  [feroxbuster]  33% (1664 KB)  [feroxbuster]  35% (1728 KB)  [feroxbuster]  36% (1792 KB)  [feroxbuster]  37% (1856 KB)  [feroxbuster]  39% (1920 KB)  [feroxbuster]  40% (1984 KB)  [feroxbuster]  41% (2048 KB)  [feroxbuster]  43% (2112 KB)  [feroxbuster]  44% (2176 KB)  [feroxbuster]  45% (2240 KB)  [feroxbuster]  47% (2304 KB)  [feroxbuster]  48% (2368 KB)  [feroxbuster]  49% (2432 KB)  [feroxbuster]  50% (2496 KB)  [feroxbuster]  52% (2560 KB)  [feroxbuster]  53% (2624 KB)  [feroxbuster]  54% (2688 KB)  [feroxbuster]  56% (2752 KB)  [feroxbuster]  57% (2816 KB)  [feroxbuster]  58% (2880 KB)  [feroxbuster]  60% (2944 KB)  [feroxbuster]  61% (3008 KB)  [feroxbuster]  62% (3072 KB)  [feroxbuster]  64% (3136 KB)  [feroxbuster]  65% (3200 KB)  [feroxbuster]  66% (3264 KB)  [feroxbuster]  67% (3328 KB)  [feroxbuster]  69% (3392 KB)  [feroxbuster]  70% (3456 KB)  [feroxbuster]  71% (3520 KB)  [feroxbuster]  73% (3584 KB)  [feroxbuster]  74% (3648 KB)  [feroxbuster]  75% (3712 KB)  [feroxbuster]  77% (3776 KB)  [feroxbuster]  78% (3840 KB)  [feroxbuster]  79% (3904 KB)  [feroxbuster]  81% (3968 KB)  [feroxbuster]  82% (4032 KB)  [feroxbuster]  83% (4096 KB)  [feroxbuster]  84% (4160 KB)  [feroxbuster]  86% (4224 KB)  [feroxbuster]  87% (4288 KB)  [feroxbuster]  88% (4352 KB)  [feroxbuster]  90% (4416 KB)  [feroxbuster]  91% (4480 KB)  [feroxbuster]  92% (4544 KB)  [feroxbuster]  94% (4608 KB)  [feroxbuster]  95% (4672 KB)  [feroxbuster]  96% (4736 KB)  [feroxbuster]  98% (4800 KB)  [feroxbuster]  99% (4864 KB)  [feroxbuster] 100% (4895 KB)error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
+    
+    If you wish to install a non-Debian-packaged Python package,
+    create a virtual environment using python3 -m venv path/to/venv.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+    sure you have python3-full installed.
+    
+    If you wish to install a non-Debian packaged Python application,
+    it may be easiest to use pipx install xyz, which will manage a
+    virtual environment for you. Make sure you have pipx installed.
+    
+    See /usr/share/doc/python3.12/README.venv for more information.
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.
+Defaulting to user installation because normal site-packages is not writeable
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x71b0ffa3cfe0>: Failed to establish a new connection: [Errno 101] Network is unreachable')': /simple/netexec/
+WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError('<pip._vendor.urllib3.connection.HTTPSConnection object at 0x71b0ffa60ec0>: Failed to establish a new connection: [Errno 101] Network is unreachable')': /simple/netexec/
+ERROR: Could not find a version that satisfies the requirement netexec (from versions: none)
+ERROR: No matching distribution found for netexec
+
+  [feroxbuster] ✓ Installed → /home/rahmat/mvp/crush-gear/bin/feroxbuster
+  [netexec] Installing via pip (netexec from PyPI) ...
+  [netexec] $ /usr/bin/python3.12 -m pip install netexec
+  [netexec] ✗ FAILED (exit 1)
+  [netexec] Retrying pip with --break-system-packages ...
+  [netexec] $ /usr/bin/python3.12 -m pip install netexec --break-system-packages
+  [netexec] ✗ FAILED (exit 1)
+  1/8 tools ready
+
+[1m[1;33m▶ Setting up nuclei templates[0m
+  [1;33m⚠ Nuclei binary not found — skipping template download[0m
+
+[1m[1;33m▶ Setting up wordlists[0m
+  [0;36m→ SecLists not found — attempting install...[0m
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+  [0;36m→ Cloning SecLists from GitHub (~500MB)...[0m
+sudo: a terminal is required to read the password; either use the -S option to read from standard input or configure an askpass helper
+sudo: a password is required
+  [0;32m✓ Bundled wordlist OK (20115 lines)[0m
+  [1;33m⚠ SecLists not installed — feroxbuster will use bundled fallback wordlist[0m
+
+[1m[1;33m▶ Validating all tools & dependencies[0m
+
+[1m╔══════════════════════════════════════════════════════════════════╗[0m
+[1m║               CrushGear — Tool Validation Report                ║[0m
+[1m╠══════════════════════════════════════════════════════════════════╣[0m
+
+  nmap            [0;31mMISSING   [0m  install: apt install nmap
+  amass           [1;33mMISSING   [0m  run: bash install.sh --fix
+  httpx           [1;33mMISSING   [0m  run: bash install.sh --fix
+  netexec         [0;31mMISSING   [0m  pipx install netexec --python python3.12
+  smbmap          [1;33mMISSING   [0m  run: bash install.sh --fix
+  nuclei          [0;31mMISSING   [0m  run: bash install.sh --fix
+  feroxbuster     [0;32mOK        [0m  2.13.1  |  wordlist: wordlists/common.txt (20115 lines)
+  metasploit      [1;33mSKIPPED   [0m  skipped via --no-msf flag
+
+[1m╠══════════════════════════════════════════════════════════════════╣[0m
+  seclists        [1;33mMISSING   [0m  apt install seclists  (feroxbuster will use bundled fallback)
+  nuclei-tmpl     [0;31mMISSING   [0m  run: /home/rahmat/mvp/crush-gear/bin/nuclei -update-templates
+
+[1m╠══════════════════════════════════════════════════════════════════╣[0m
+[1m[1;33m║  RESULT: Some issues found — see warnings above                  ║[0m
+[1m[1;33m║  Re-run:  bash install.sh --fix                                  ║[0m
+[1m╚══════════════════════════════════════════════════════════════════╝[0m
+
+[1m[0;32m╔══════════════════════════════════════════════════════════╗[0m
+[1m[0;32m║  Installation complete!                                  ║[0m
+[1m[0;32m╠══════════════════════════════════════════════════════════╣[0m
+[0;32m║                                                          ║[0m
+[0;32m║  Quick start:                                            ║[0m
+[0;32m║    python3 crushgear.py -t <IP/domain/URL/CIDR>          ║[0m
+[0;32m║                                                          ║[0m
+[0;32m║  Help:                                                   ║[0m
+[0;32m║    python3 crushgear.py --help-full                      ║[0m
+[0;32m║                                                          ║[0m
+[0;32m║  Update CVE mapping:                                     ║[0m
+[0;32m║    python3 crushgear.py --update-cves                    ║[0m
+[0;32m║                                                          ║[0m
+[0;32m║  Fix missing tools:                                      ║[0m
+[0;32m║    bash install.sh --fix                                 ║[0m
+[0;32m║                                                          ║[0m
+[0;32m╚══════════════════════════════════════════════════════════╝[0m
+

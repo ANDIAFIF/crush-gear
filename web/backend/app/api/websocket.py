@@ -1,5 +1,6 @@
 """WebSocket API endpoint for real-time updates."""
 
+import asyncio
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.services.scan_manager import scan_manager
 
@@ -31,12 +32,24 @@ async def websocket_endpoint(websocket: WebSocket, scan_id: int):
             "message": "WebSocket connected - ready to receive real-time updates"
         })
 
-        # Keep connection alive - wait for client messages or disconnect
+        # Keep connection alive with timeout to detect dead connections
         while True:
-            data = await websocket.receive_text()
-            # Optional: Handle client messages (ping/pong, etc.)
-            if data == "ping":
-                await websocket.send_json({"type": "pong"})
+            try:
+                # Wait for client messages with 30 second timeout
+                data = await asyncio.wait_for(
+                    websocket.receive_text(),
+                    timeout=30.0
+                )
+                # Handle client messages (ping/pong, etc.)
+                if data == "ping":
+                    await websocket.send_json({"type": "pong"})
+            except asyncio.TimeoutError:
+                # Send ping to check if connection is still alive
+                try:
+                    await websocket.send_json({"type": "ping"})
+                except:
+                    # Connection is dead, break out of loop
+                    break
 
     except WebSocketDisconnect:
         print(f"WebSocket disconnected for scan {scan_id}")

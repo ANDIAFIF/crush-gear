@@ -34,19 +34,19 @@ class AmassTool(BaseTool):
             # For CIDR: passive OSINT to find hostnames resolving to these IPs
             # Active mode + brute doesn't help for RFC1918 internal ranges,
             # but passive checks certificate transparency and reverse DNS.
-            # Note: -ip and -src removed in Amass v5
+            # Note: -ip, -src, and -json removed in Amass v4+
             return [
                 self.binary, "enum",
                 "-passive",
                 "-cidr",    t.cidr,
                 "-timeout", "25",    # minutes
-                "-json",
                 "-r",       resolvers,
             ]
 
         # IP, DOMAIN, URL → domain-based enumeration
         domain = t.host
-        # Note: -ip, -src, -rf removed in Amass v5
+        # Note: -ip, -src, -rf, and -json removed in Amass v4+
+        # Amass v4+ outputs plain text format (one hostname per line)
         return [
             self.binary, "enum",
             "-passive",              # OSINT sources (no DNS bruteforce noise)
@@ -54,6 +54,5 @@ class AmassTool(BaseTool):
             "-brute",                # DNS bruteforce with built-in wordlist
             "-d",       domain,
             "-timeout", "25",        # hard cap in minutes
-            "-json",
             "-r",       resolvers,   # use fast public resolvers
         ]

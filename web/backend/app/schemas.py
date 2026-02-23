@@ -166,5 +166,21 @@ class ToolOutputListResponse(BaseModel):
     total: int
 
 
+class ToolOutputLine(BaseModel):
+    """Single tool output line with tool name."""
+    line_num: int
+    line_text: str
+    tool_name: str
+    timestamp: Optional[str]
+
+
+class ScanToolOutputsResponse(BaseModel):
+    """Response for scan tool outputs endpoint."""
+    outputs: List[ToolOutputLine]
+    total: int
+    skip: int
+    limit: int
+
+
 # Update forward references
 ScanDetail.model_rebuild()

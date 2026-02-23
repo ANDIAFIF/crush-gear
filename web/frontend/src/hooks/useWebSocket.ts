@@ -13,24 +13,25 @@ interface UseWebSocketOptions {
   maxReconnectAttempts?: number;
 }
 
-export function useWebSocket(scanId: number, options: UseWebSocketOptions = {}) {
+export function useWebSocket(scanId: number, options?: UseWebSocketOptions) {
   const {
     onMessage,
     reconnectInterval = 3000,
     maxReconnectAttempts = 5,
-  } = options;
+  } = options || {};
 
   const ws = useRef<WebSocket | null>(null);
   const reconnectCount = useRef(0);
-  const reconnectTimeout = useRef<number>();
-  
+  const reconnectTimeout = useRef<number | undefined>(undefined);
+  const connectRef = useRef<(() => void) | null>(null);
+
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
 
   const connect = useCallback(() => {
     try {
       const socket = new WebSocket(`${WS_BASE_URL}/ws/scans/${scanId}`);
-      
+
       socket.onopen = () => {
         console.log(`WebSocket connected to scan ${scanId}`);
         setIsConnected(true);
@@ -56,9 +57,9 @@ export function useWebSocket(scanId: number, options: UseWebSocketOptions = {}) 
         if (reconnectCount.current < maxReconnectAttempts) {
           reconnectCount.current++;
           console.log(`Reconnecting... (attempt ${reconnectCount.current}/${maxReconnectAttempts})`);
-          
+
           reconnectTimeout.current = window.setTimeout(() => {
-            connect();
+            connectRef.current?.();
           }, reconnectInterval);
         } else {
           console.error('Max reconnection attempts reached');
@@ -76,6 +77,15 @@ export function useWebSocket(scanId: number, options: UseWebSocketOptions = {}) 
   }, [scanId, onMessage, reconnectInterval, maxReconnectAttempts]);
 
   useEffect(() => {
+    // Store connect function in ref so it can be called recursively
+    connectRef.current = connect;
+
+    // Skip WebSocket connection if scanId is 0 or invalid
+    if (!scanId || scanId <= 0) {
+      console.log('WebSocket disabled - invalid scan ID');
+      return;
+    }
+
     connect();
 
     return () => {
@@ -87,7 +97,7 @@ export function useWebSocket(scanId: number, options: UseWebSocketOptions = {}) 
         ws.current.close();
       }
     };
-  }, [connect]);
+  }, [connect, scanId]);
 
   const sendMessage = useCallback((message: string) => {
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {

@@ -4,47 +4,77 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useScan, useHosts, useVulnerabilities } from '../hooks/useScans';
+import { useScan, useHosts, useVulnerabilities, useToolOutputs } from '../hooks/useScans';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { ScanStatusBadge } from '../components/ScanStatusBadge';
 import { PhaseProgress } from '../components/PhaseProgress';
 import { ToolStatusCard } from '../components/ToolStatusCard';
 import { ToolOutput } from '../components/ToolOutput';
-import type { WebSocketMessage } from '../types';
+import type { WebSocketMessage, ToolOutputLine } from '../types';
 
 export function ScanDetailPage() {
   const { id } = useParams<{ id: string }>();
   const scanId = parseInt(id || '0');
 
+  // Auto-refresh hooks use refetchInterval internally based on scan status
   const { data: scan, isLoading, error } = useScan(scanId);
-  const { data: hostsData } = useHosts(scanId);
-  const { data: vulnsData } = useVulnerabilities(scanId);
+  const { data: hostsData } = useHosts(scanId, scan?.status);
+  const { data: vulnsData } = useVulnerabilities(scanId, scan?.status);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'terminal' | 'hosts' | 'vulnerabilities'>('overview');
-  const [terminalLines, setTerminalLines] = useState<{ line_num: number; line_text: string }[]>([]);
+  const [terminalLines, setTerminalLines] = useState<ToolOutputLine[]>([]);
   const [selectedTool, setSelectedTool] = useState<string>('all');
 
-  // WebSocket for real-time updates
-  const { isConnected, lastMessage } = useWebSocket(scanId, {
-    onMessage: (message: WebSocketMessage) => {
-      if (message.type === 'tool_output') {
-        // Add to terminal output
-        if (selectedTool === 'all' || selectedTool === message.tool) {
-          setTerminalLines((prev) => [
-            ...prev,
-            { line_num: message.line_num, line_text: `[${message.tool}] ${message.line}` },
-          ]);
+  // Fetch historical tool outputs - auto-refetches for running scans
+  const toolOutputFilter = selectedTool !== 'all' ? selectedTool : undefined;
+  const { data: historicalOutputs } = useToolOutputs(scanId, toolOutputFilter, { limit: 5000 }, scan?.status);
+
+  // WebSocket for real-time updates (TEMPORARILY DISABLED due to connection issues)
+  // Using REST API polling with refetchInterval instead
+  const { isConnected } = useWebSocket(
+    0, // Disabled - pass 0 to prevent connection
+    {
+      onMessage: (message: WebSocketMessage) => {
+        if (message.type === 'tool_output') {
+          // Add to terminal output
+          if (selectedTool === 'all' || selectedTool === message.tool) {
+            setTerminalLines((prev) => [
+              ...prev,
+              {
+                line_num: message.line_num,
+                line_text: `[${message.tool}] ${message.line}`,
+                tool_name: message.tool,
+                timestamp: message.timestamp
+              },
+            ]);
+          }
         }
+      },
+    }
+  );
+  
+  // Load historical outputs when scan is completed or when filter changes
+  useEffect(() => {
+    if (historicalOutputs?.outputs) {
+      // If scan is not running, use historical outputs
+      if (scan?.status === 'COMPLETED' || scan?.status === 'ERROR') {
+        setTerminalLines(historicalOutputs.outputs);
       }
-    },
-  });
+      // If scan is running and we just switched filters, load what exists so far
+      else if (scan?.status === 'RUNNING' && terminalLines.length === 0) {
+        setTerminalLines(historicalOutputs.outputs);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historicalOutputs, scan?.status, selectedTool]);
 
   // Compute phase statuses
-  const phases = [
-    { number: 0, name: 'Port Scan', status: 'pending' as const },
-    { number: 1, name: 'Reconnaissance', status: 'pending' as const },
-    { number: 2, name: 'Scanning', status: 'pending' as const },
-    { number: 3, name: 'Exploitation', status: 'pending' as const },
+  type PhaseStatus = 'pending' | 'running' | 'completed' | 'error';
+  const phases: Array<{ number: number; name: string; status: PhaseStatus }> = [
+    { number: 0, name: 'Port Scan', status: 'pending' },
+    { number: 1, name: 'Reconnaissance', status: 'pending' },
+    { number: 2, name: 'Scanning', status: 'pending' },
+    { number: 3, name: 'Exploitation', status: 'pending' },
   ];
 
   // Update phase statuses based on tool executions
@@ -104,7 +134,7 @@ export function ScanDetailPage() {
       </div>
 
       {/* Phase Progress */}
-      <PhaseProgress currentPhase={0} phases={phases} />
+      <PhaseProgress phases={phases} />
 
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">

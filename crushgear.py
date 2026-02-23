@@ -245,6 +245,190 @@ def ask_lhost() -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# CrushGear Class (for Web Integration)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class CrushGear:
+    """
+    CrushGear wrapper class for programmatic API access (used by web backend).
+    
+    Usage:
+        crusher = CrushGear(target="192.168.1.1", tools="nmap,nuclei", 
+                           username="admin", password="pass", 
+                           lhost="10.0.0.1", lport=4444)
+        crusher._prepare()
+        
+        # Then pass to run_phased():
+        results = await run_phased(
+            phase0_wrappers=crusher.phase0_wrappers,
+            phase1_wrappers=crusher.phase1_wrappers,
+            phase2_factory=crusher.phase2_factory,
+            phase3_factory=crusher.phase3_factory,
+            output_dir=crusher.output_dir,
+            cfg_timeouts=crusher.config.get("timeouts", {}),
+            callbacks=your_callbacks
+        )
+    """
+    
+    def __init__(
+        self,
+        target: str,
+        tools: str = None,
+        username: str = "",
+        password: str = "",
+        lhost: str = None,
+        lport: int = None,
+    ):
+        """
+        Initialize CrushGear with scan parameters.
+        
+        Args:
+            target: Target IP/domain/URL/CIDR
+            tools: Comma-separated tool names (e.g., "nmap,nuclei") or None for all
+            username: Username for authentication (NetExec/SMBMap)
+            password: Password for authentication
+            lhost: LHOST for reverse shells (auto-detected if None)
+            lport: LPORT for reverse shells (default: 4444)
+        """
+        self.target_raw = target
+        self.tools_str = tools
+        self.username = username
+        self.password = password
+        self.lhost_input = lhost
+        self.lport_input = lport
+        
+        # Will be set by _prepare()
+        self.config = None
+        self.target = None
+        self.output_dir = None
+        self.phase0_wrappers = []
+        self.phase1_wrappers = []
+        self.phase2_factory = None
+        self.phase3_factory = None
+        self._requested_tools = set()
+        self._binaries = {}
+        self._lhost = None
+        self._lport = None
+    
+    def _prepare(self):
+        """
+        Prepare tool wrappers and configuration.
+        Must be called before accessing phase wrappers.
+        """
+        # Load config
+        self.config = load_config()
+        self._binaries = self.config.get("binaries", {})
+        cfg_timeouts = self.config.get("timeouts", {})
+        
+        # Parse target
+        self.target = parse_target(self.target_raw)
+        
+        # Determine requested tools
+        if self.tools_str:
+            self._requested_tools = set(self.tools_str.split(","))
+        else:
+            self._requested_tools = set(ALL_TOOLS)
+        
+        # Setup LHOST/LPORT
+        if self.lhost_input:
+            self._lhost = self.lhost_input
+        elif self.config.get("lhost") and self.config["lhost"] != "0.0.0.0":
+            self._lhost = self.config["lhost"]
+        else:
+            self._lhost = detect_lhost()
+        
+        if self.lport_input:
+            self._lport = self.lport_input
+        else:
+            self._lport = self.config.get("lport", 4444)
+        
+        # Setup output directory
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe = self.target_raw.replace("/", "_").replace(":", "_").replace(".", "_")
+        self.output_dir = RESULTS_DIR / f"{safe}_{timestamp}"
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Get full CVE map
+        full_cve_map = get_full_cve_map(CONFIG_FILE)
+        
+        # Helper to resolve binary
+        def binary(tool_name: str) -> str:
+            return resolve_binary(tool_name, self._binaries) if tool_name in self._requested_tools else ""
+        
+        # ── Phase 0 ──────────────────────────────────────────────────
+        self.phase0_wrappers = []
+        if "nmap" in self._requested_tools:
+            self.phase0_wrappers.append(
+                NmapTool(
+                    target=self.target,
+                    binary=binary("nmap"),
+                    username=self.username,
+                    password=self.password
+                )
+            )
+        
+        # ── Phase 1 ──────────────────────────────────────────────────
+        self.phase1_wrappers = []
+        if "amass" in self._requested_tools:
+            self.phase1_wrappers.append(
+                AmassTool(
+                    target=self.target,
+                    binary=binary("amass"),
+                    username=self.username,
+                    password=self.password
+                )
+            )
+        if "httpx" in self._requested_tools:
+            self.phase1_wrappers.append(
+                HttpxTool(
+                    target=self.target,
+                    binary=binary("httpx"),
+                    username=self.username,
+                    password=self.password
+                )
+            )
+        
+        # ── Phase 2 Factory ──────────────────────────────────────────
+        def make_phase2(feed: dict) -> list:
+            kw = dict(
+                target=self.target,
+                username=self.username,
+                password=self.password,
+                feed=feed
+            )
+            wrappers = []
+            if "netexec" in self._requested_tools:
+                wrappers.append(NetExecTool(binary=binary("netexec"), **kw))
+            if "smbmap" in self._requested_tools:
+                wrappers.append(SmbmapTool(binary=binary("smbmap"), **kw))
+            if "nuclei" in self._requested_tools:
+                wrappers.append(NucleiTool(binary=binary("nuclei"), **kw))
+            if "feroxbuster" in self._requested_tools:
+                wrappers.append(FeroxbusterTool(binary=binary("feroxbuster"), **kw))
+            return wrappers
+        
+        self.phase2_factory = make_phase2
+        
+        # ── Phase 3 Factory ──────────────────────────────────────────
+        def make_phase3(feed: dict) -> list:
+            if "metasploit" not in self._requested_tools:
+                return []
+            return [
+                MetasploitTool(
+                    target=self.target,
+                    binary=binary("metasploit"),
+                    username=self.username,
+                    password=self.password,
+                    feed={**feed, "extra_cve_map": full_cve_map},
+                    lhost=self._lhost,
+                    lport=self._lport,
+                )
+            ]
+        
+        self.phase3_factory = make_phase3
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Help system
 # ─────────────────────────────────────────────────────────────────────────────
 
