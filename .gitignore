@@ -7,6 +7,10 @@ results/
 __pycache__/
 *.pyc
 
+# ── Logs ──
+*.log
+web/backend/*.log
+
 # ── OS files ──
 .DS_Store
 Thumbs.db
