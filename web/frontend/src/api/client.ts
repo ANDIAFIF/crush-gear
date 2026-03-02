@@ -20,7 +20,20 @@ const api = axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
   },
+});
+
+// Add request interceptor to add timestamp for cache busting
+api.interceptors.request.use((config) => {
+  // Add timestamp to prevent caching
+  config.params = {
+    ...config.params,
+    _t: Date.now(),
+  };
+  return config;
 });
 
 // Scan endpoints

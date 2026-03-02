@@ -1,0 +1,32 @@
+[Unit]
+Description=CrushGear Web Backend (FastAPI/Uvicorn)
+After=network-online.target
+Wants=network-online.target
+Before=crushgear-frontend.service
+
+[Service]
+Type=simple
+User=rahmat
+WorkingDirectory=/home/rahmat/mvp/crush-gear/web/backend
+Environment="PATH=/home/rahmat/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONUNBUFFERED=1"
+
+# Pre-start: Check and install tools if needed
+ExecStartPre=/bin/bash /home/rahmat/mvp/crush-gear/web/check-and-install-tools.sh
+
+# Start backend
+ExecStart=/usr/bin/python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# Auto-restart on failure
+Restart=always
+RestartSec=10
+StartLimitBurst=5
+StartLimitInterval=300
+
+# Logging
+StandardOutput=append:/home/rahmat/mvp/crush-gear/web/backend/backend.log
+StandardError=append:/home/rahmat/mvp/crush-gear/web/backend/backend.log
+SyslogIdentifier=crushgear-backend
+
+[Install]
+WantedBy=multi-user.target

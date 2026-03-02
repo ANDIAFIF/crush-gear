@@ -1,0 +1,29 @@
+[Unit]
+Description=CrushGear Web Frontend (Vite/React)
+After=network-online.target crushgear-backend.service
+Wants=network-online.target
+BindsTo=crushgear-backend.service
+
+[Service]
+Type=simple
+User=rahmat
+WorkingDirectory=/home/rahmat/mvp/crush-gear/web/frontend
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="NODE_ENV=development"
+
+# Start frontend
+ExecStart=/usr/bin/npm run dev
+
+# Auto-restart on failure
+Restart=always
+RestartSec=10
+StartLimitBurst=5
+StartLimitInterval=300
+
+# Logging
+StandardOutput=append:/home/rahmat/mvp/crush-gear/web/frontend/frontend.log
+StandardError=append:/home/rahmat/mvp/crush-gear/web/frontend/frontend.log
+SyslogIdentifier=crushgear-frontend
+
+[Install]
+WantedBy=multi-user.target

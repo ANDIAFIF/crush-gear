@@ -277,10 +277,6 @@ def parse_nuclei(output_dir: Path) -> list[dict]:
             continue
         try:
             obj = json.loads(line)
-            # Skip progress/stats lines (they have "duration", "errors", "matched" but no "template")
-            if "template" not in obj and "template-id" not in obj:
-                continue
-
             info = obj.get("info", {})
             classification = info.get("classification", {})
             # nuclei may output "cve-id": null — use `or []` to guard against None
@@ -293,20 +289,9 @@ def parse_nuclei(output_dir: Path) -> list[dict]:
             # Fallback: template-id might itself be a CVE identifier
             if not cve_ids and template_id.upper().startswith("CVE-"):
                 cve_ids = [template_id.upper()]
-
-            # If CVE IDs exist, create one finding per CVE
-            if cve_ids:
-                for cve in cve_ids:
-                    findings.append({
-                        "cve":         cve.upper(),
-                        "host":        host,
-                        "template_id": template_id,
-                        "severity":    severity,
-                    })
-            else:
-                # Non-CVE findings (like weak-cipher-suites, misconfigs, etc.)
+            for cve in cve_ids:
                 findings.append({
-                    "cve":         None,  # No CVE ID
+                    "cve":         cve.upper(),
                     "host":        host,
                     "template_id": template_id,
                     "severity":    severity,

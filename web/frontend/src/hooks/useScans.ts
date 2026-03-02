@@ -32,6 +32,14 @@ export function useScans(filters?: ScanFilters) {
   return useQuery({
     queryKey: scanKeys.list(filters || {}),
     queryFn: () => scanApi.list(filters),
+    refetchInterval: (query) => {
+      // Auto-refetch every 3 seconds if there are any running/pending scans
+      const data = query.state.data;
+      const hasActiveScans = data?.scans?.some(
+        (scan) => scan.status === 'RUNNING' || scan.status === 'PENDING'
+      );
+      return hasActiveScans ? 3000 : 10000; // 3s if active, 10s otherwise
+    },
   });
 }
 
